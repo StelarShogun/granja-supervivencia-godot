@@ -1,0 +1,9 @@
+63f7b34db8d8cdea90c76aacccf841ec
+::res://::1780495689
+icon.svg::CompressedTexture2D::6194213393825185690::1780420124::1780495690::1::::<><><>0<>0<>2576a4365c25a0a00fae159cb90ce37a<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+main.tscn::PackedScene::5084956064971077490::1780495535::0::1::::<><><>0<>0<><>::uid://bcrciavxfvtid::::res://Terreno Finca.glb
+README.md::TextFile::-1::1780495617::0::1::::<><><>0<>0<><>::
+Terreno Finca.glb::PackedScene::2562028546618390903::1780494798::1780495699::1::::<><><>0<>0<>6ca0792409a1de1e2b629dd16de45d3c<>res://.godot/imported/Terreno Finca.glb-28fddfbf8bf9cc2f2014015337b1f6a2.scn::uid://by1ur66fvkfc5::::res://Terreno Finca_DefaultMaterial_BaseColor.jpg<>uid://vrnpxt7oqx1k::::res://Terreno Finca_DefaultMaterial_Metallic.1001.jpg-DefaultMaterial_Roughness.1001.png<>uid://drycdwsu1f6a2::::res://Terreno Finca_DefaultMaterial_Normal.jpg
+Terreno Finca_DefaultMaterial_BaseColor.jpg::CompressedTexture2D::4125873127331575414::1780494835::1780495690::1::::<><><>0<>0<>45b627a714f64dc816cbaeee0411ec0c<>res://.godot/imported/Terreno Finca_DefaultMaterial_BaseColor.jpg-f4a2e831809762c0cc78fc42a4d570ef.s3tc.ctex::
+Terreno Finca_DefaultMaterial_Metallic.1001.jpg-DefaultMaterial_Roughness.1001.png::CompressedTexture2D::1509877484893869562::1780494837::1780495691::1::::<><><>0<>0<>86d320c958b50c235da58ef36e765c55<>res://.godot/imported/Terreno Finca_DefaultMaterial_Metallic.1001.jpg-DefaultMaterial_Roughness.1001.png-40412cbf13ce8b8ddc37cf1effdf2425.s3tc.ctex::
+Terreno Finca_DefaultMaterial_Normal.jpg::CompressedTexture2D::8402145434654404191::1780494833::1780495691::1::::<><><>0<>0<>861f5663cd6bd7ff7a5d3e62e01c4468<>res://.godot/imported/Terreno Finca_DefaultMaterial_Normal.jpg-ea2853bea2cf8994909aa92fc1550304.s3tc.ctex::
