@@ -1,0 +1,33 @@
+# Godot cache/editor data
+.godot/
+
+# Godot 3 legacy import cache, only if exists as folder
+.import/
+
+# Export/build outputs
+exports/*
+!exports/.gitkeep
+builds/*
+!builds/.gitkeep
+
+# Blender temporary files
+*.blend1
+*.blend2
+*.blend@
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local AI/editor helper plugins - development only
+addons/godot-ai/
+addons/godot_ai/
+addons/GodotAI/
+addons/godot-mcp-enhanced/
+addons/godot_mcp_enhanced/
+addons/mcp_server/
+addons/MCPServer/
