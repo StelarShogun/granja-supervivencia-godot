@@ -10,9 +10,10 @@ config_version=5
 
 [application]
 
-config/name="finca mieo"
+run/main_scene="res://scenes/levels/main.tscn"
+config/name="Granja Supervivencia"
 config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="res://icon.svg"
+config/icon="res://assets/icons/icon.svg"
 
 [physics]
 

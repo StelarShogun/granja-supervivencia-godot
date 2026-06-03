@@ -1,7 +1,0 @@
-[gd_scene format=3 uid="uid://cepgqo5ive4ly"]
-
-[ext_resource type="PackedScene" uid="uid://bcrciavxfvtid" path="res://Terreno Finca.glb" id="1_ig7tw"]
-
-[node name="Main" type="Node3D" unique_id=1261648568]
-
-[node name="Terreno Finca" parent="." unique_id=939373865 instance=ExtResource("1_ig7tw")]

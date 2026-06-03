@@ -1,9 +1,59 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1780495689
-icon.svg::CompressedTexture2D::6194213393825185690::1780420124::1780495690::1::::<><><>0<>0<>2576a4365c25a0a00fae159cb90ce37a<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
-main.tscn::PackedScene::5084956064971077490::1780495535::0::1::::<><><>0<>0<><>::uid://bcrciavxfvtid::::res://Terreno Finca.glb
-README.md::TextFile::-1::1780495617::0::1::::<><><>0<>0<><>::
-Terreno Finca.glb::PackedScene::2562028546618390903::1780494798::1780495699::1::::<><><>0<>0<>6ca0792409a1de1e2b629dd16de45d3c<>res://.godot/imported/Terreno Finca.glb-28fddfbf8bf9cc2f2014015337b1f6a2.scn::uid://by1ur66fvkfc5::::res://Terreno Finca_DefaultMaterial_BaseColor.jpg<>uid://vrnpxt7oqx1k::::res://Terreno Finca_DefaultMaterial_Metallic.1001.jpg-DefaultMaterial_Roughness.1001.png<>uid://drycdwsu1f6a2::::res://Terreno Finca_DefaultMaterial_Normal.jpg
-Terreno Finca_DefaultMaterial_BaseColor.jpg::CompressedTexture2D::4125873127331575414::1780494835::1780495690::1::::<><><>0<>0<>45b627a714f64dc816cbaeee0411ec0c<>res://.godot/imported/Terreno Finca_DefaultMaterial_BaseColor.jpg-f4a2e831809762c0cc78fc42a4d570ef.s3tc.ctex::
-Terreno Finca_DefaultMaterial_Metallic.1001.jpg-DefaultMaterial_Roughness.1001.png::CompressedTexture2D::1509877484893869562::1780494837::1780495691::1::::<><><>0<>0<>86d320c958b50c235da58ef36e765c55<>res://.godot/imported/Terreno Finca_DefaultMaterial_Metallic.1001.jpg-DefaultMaterial_Roughness.1001.png-40412cbf13ce8b8ddc37cf1effdf2425.s3tc.ctex::
-Terreno Finca_DefaultMaterial_Normal.jpg::CompressedTexture2D::8402145434654404191::1780494833::1780495691::1::::<><><>0<>0<>861f5663cd6bd7ff7a5d3e62e01c4468<>res://.godot/imported/Terreno Finca_DefaultMaterial_Normal.jpg-ea2853bea2cf8994909aa92fc1550304.s3tc.ctex::
+::res://::1780499442
+README.md::TextFile::-1::1780520640::0::1::::<><><>0<>0<><>::
+::res://addons/::1780520640
+::res://assets/::1780520636
+::res://assets/audio/::1780520636
+::res://assets/audio/music/::1780520640
+::res://assets/audio/sfx/::1780520640
+::res://assets/fonts/::1780520640
+::res://assets/icons/::1780520636
+icon.svg::CompressedTexture2D::6194213393825185690::1780420124::1780499445::1::::<><><>0<>0<>a11d4251ecc65032c22f6933db923229<>res://.godot/imported/icon.svg-7c8e6dfe2213e2029f33175ecfc9166b.ctex::
+::res://assets/materials/::1780520636
+::res://assets/materials/characters/::1780520640
+::res://assets/materials/environment/::1780520640
+::res://assets/models/::1780520636
+::res://assets/models/animals/::1780520640
+::res://assets/models/characters/::1780520636
+::res://assets/models/characters/enemies/::1780520640
+::res://assets/models/characters/player/::1780520640
+::res://assets/models/environment/::1780520636
+Terreno_Finca_DefaultMaterial_Metallic.1001.jpg-DefaultMaterial_Roughness.1001.png::CompressedTexture2D::1487212600069010677::1780499452::1780499453::1::::<><><>0<>0<>e87750cbf8ae5dcd23432ce82e41b6f0<>res://.godot/imported/Terreno_Finca_DefaultMaterial_Metallic.1001.jpg-DefaultMaterial_Roughness.1001.png-cd56b4e3f20043c10880d76c8f73dc1a.ctex::
+Terreno_Finca_DefaultMaterial_BaseColor.jpg::CompressedTexture2D::501988028672870434::1780499450::1780499451::1::::<><><>0<>0<>41c3a48a5f51bdde449572fa8e7987e6<>res://.godot/imported/Terreno_Finca_DefaultMaterial_BaseColor.jpg-8eae1c90b27b65928f294eb02f76e0a3.ctex::
+Terreno_Finca_DefaultMaterial_Normal.jpg::CompressedTexture2D::3603075449079537333::1780499446::1780499449::1::::<><><>0<>0<>c348731501e15281d58809cf3ba9caa5<>res://.godot/imported/Terreno_Finca_DefaultMaterial_Normal.jpg-3df928a84070e44952e40bd070245e42.ctex::
+Terreno_Finca.glb::PackedScene::2562028546618390903::1780495876::1780499461::1::::<><><>0<>0<>096018c689f049ea7ac83038b4189737<>res://.godot/imported/Terreno_Finca.glb-f873b78a807cf80a46bcbe8a8372b6f7.scn::uid://hffw06w0xtti::::res://assets/models/environment/Terreno_Finca_DefaultMaterial_BaseColor.jpg<>uid://vgof6ojnh40h::::res://assets/models/environment/Terreno_Finca_DefaultMaterial_Metallic.1001.jpg-DefaultMaterial_Roughness.1001.png<>uid://brlmej6mjb2hd::::res://assets/models/environment/Terreno_Finca_DefaultMaterial_Normal.jpg
+::res://assets/textures/::1780520636
+::res://assets/textures/characters/::1780520640
+::res://assets/textures/environment/::1780520636
+Terreno_Finca_BaseColor.jpg::CompressedTexture2D::4125873127331575414::1780495876::1780499445::1::::<><><>0<>0<>adfa0a67445a3afebcd03ac138db71c2<>res://.godot/imported/Terreno_Finca_BaseColor.jpg-dbcc3bd37245454be4437b3b82e7e77a.s3tc.ctex::
+Terreno_Finca_Metallic_Roughness.png::CompressedTexture2D::1509877484893869562::1780495876::1780499445::1::::<><><>0<>0<>8f4f10b8cff5c0dc04347448c86f66bb<>res://.godot/imported/Terreno_Finca_Metallic_Roughness.png-0f3dfb8cb48fcce66cb9515a9cdb7ff8.s3tc.ctex::
+Terreno_Finca_Normal.jpg::CompressedTexture2D::8402145434654404191::1780495876::1780499445::1::::<><><>0<>0<>26abe1a1be0e121a80e97e1d9ea7ca58<>res://.godot/imported/Terreno_Finca_Normal.jpg-fb8ab8eacaefcb46b1531539c5676097.s3tc.ctex::
+::res://assets/textures/ui/::1780520640
+::res://docs/::1780520636
+::res://docs/blender/::1780520640
+::res://docs/design/::1780520640
+::res://docs/exports/::1780520640
+::res://docs/godot/::1780520640
+ESTRUCTURA_PROYECTO.md::TextFile::-1::1780520640::0::1::::<><><>0<>0<><>::
+::res://exports/::1780520636
+::res://exports/linux/::1780520640
+::res://exports/web/::1780520640
+::res://exports/windows/::1780520640
+::res://scenes/::1780520636
+::res://scenes/animals/::1780520640
+::res://scenes/characters/::1780520636
+::res://scenes/characters/enemies/::1780520640
+::res://scenes/characters/player/::1780520640
+::res://scenes/levels/::1780520636
+main.tscn::PackedScene::5084956064971077490::1780520638::0::1::::<><><>0<>0<><>::uid://bcrciavxfvtid::::res://assets/models/environment/Terreno_Finca.glb
+::res://scenes/ui/::1780520640
+::res://scripts/::1780520636
+::res://scripts/animals/::1780520640
+::res://scripts/enemies/::1780520640
+::res://scripts/managers/::1780520640
+::res://scripts/player/::1780520640
+::res://scripts/ui/::1780520640
+::res://scripts/utils/::1780520640
+::res://shaders/::1780520640
+::res://tools/::1780520636
+::res://tools/blender/::1780520640
