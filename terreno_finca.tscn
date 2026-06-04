@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://b585u1vyhkd8h"]
+
+[ext_resource type="PackedScene" uid="uid://d2i51odey6adv" path="res://assets/models/environment/Terreno_Finca.glb" id="1_dwf8a"]
+
+[node name="Terreno_Finca" unique_id=251770996 instance=ExtResource("1_dwf8a")]

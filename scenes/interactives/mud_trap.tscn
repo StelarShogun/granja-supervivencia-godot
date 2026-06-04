@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactives/mud_trap.gd" id="1_mud_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mud"]
+albedo_color = Color(0.12, 0.08, 0.045, 1)
+metallic = 0.1
+metallic_specular = 0.7
+roughness = 0.25
+
+[sub_resource type="BoxMesh" id="BoxMesh_mud"]
+size = Vector3(8.8, 0.12, 8.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mud"]
+size = Vector3(8.8, 0.8, 8.8)
+
+[node name="MudTrap" type="Area3D" groups=["interactives"]]
+script = ExtResource("1_mud_script")
+collision_layer = 8
+collision_mask = 1
+monitoring = true
+monitorable = true
+
+[node name="MudVisual" type="MeshInstance3D" parent="."]
+visible = false
+mesh = SubResource("BoxMesh_mud")
+surface_material_override/0 = SubResource("StandardMaterial3D_mud")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_mud")

@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactives/bridge_trigger.gd" id="1_bridge_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bridge"]
+albedo_color = Color(0.42, 0.34, 0.24, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bridge"]
+size = Vector3(5.0, 0.2, 3.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bridge"]
+size = Vector3(7.0, 2.0, 5.0)
+
+[node name="BridgeTrigger" type="Area3D" groups=["interactives"]]
+script = ExtResource("1_bridge_script")
+collision_layer = 8
+collision_mask = 1
+monitoring = true
+monitorable = true
+
+[node name="BridgeMarker" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_bridge")
+surface_material_override/0 = SubResource("StandardMaterial3D_bridge")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_bridge")

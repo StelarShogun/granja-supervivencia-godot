@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/diablo.gd" id="1_diablo_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_diablo"]
+albedo_color = Color(0.72, 0.08, 0.05, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_diablo"]
+radius = 0.5
+height = 2.0
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_diablo"]
+radius = 0.5
+height = 2.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_hitbox"]
+radius = 0.9
+
+[node name="Diablo" type="CharacterBody3D" groups=["enemies", "diablo"]]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_diablo_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_diablo")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("CapsuleMesh_diablo")
+surface_material_override/0 = SubResource("StandardMaterial3D_diablo")
+
+[node name="HitBox" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+collision_layer = 4
+collision_mask = 1
+monitoring = true
+monitorable = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HitBox"]
+shape = SubResource("SphereShape3D_hitbox")

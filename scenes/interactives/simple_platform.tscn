@@ -1,0 +1,24 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactives/simple_platform.gd" id="1_platform_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_platform"]
+albedo_color = Color(0.42, 0.34, 0.24, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_platform"]
+size = Vector3(4.0, 0.25, 2.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_platform"]
+size = Vector3(4.0, 0.35, 2.0)
+
+[node name="SimplePlatform" type="Area3D" groups=["interactives"]]
+script = ExtResource("1_platform_script")
+monitoring = true
+monitorable = true
+
+[node name="PlatformVisual" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_platform")
+surface_material_override/0 = SubResource("StandardMaterial3D_platform")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_platform")

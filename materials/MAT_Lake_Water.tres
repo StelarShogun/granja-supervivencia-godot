@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://shaders/lake_water.gdshader" id="1_lake_shader"]
+
+[resource]
+shader = ExtResource("1_lake_shader")
+shader_parameter/lake_color = Color(0.10, 0.40, 0.48, 0.58)
+shader_parameter/deep_color = Color(0.03, 0.19, 0.27, 0.70)
+shader_parameter/shore_glint = Color(0.62, 0.88, 0.82, 0.34)
+shader_parameter/wave_speed = 0.08
+shader_parameter/wave_height = 0.04

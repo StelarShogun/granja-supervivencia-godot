@@ -1,0 +1,123 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/settings_menu.gd" id="1_settings_script"]
+[ext_resource type="StyleBox" path="res://assets/ui/panel_bg.tres" id="2_panel_bg"]
+
+[node name="SettingsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_settings_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.08, 0.08, 1)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -330.0
+offset_top = -250.0
+offset_right = 330.0
+offset_bottom = 250.0
+theme_override_styles/panel = ExtResource("2_panel_bg")
+
+[node name="Content" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Panel/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Ajustes"
+horizontal_alignment = 1
+
+[node name="AudioRow" type="HBoxContainer" parent="Panel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VolumeLabel" type="Label" parent="Panel/Content/AudioRow"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+text = "Volumen general"
+vertical_alignment = 1
+
+[node name="VolumeSlider" type="HSlider" parent="Panel/Content/AudioRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="ControlsTitle" type="Label" parent="Panel/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Controles"
+
+[node name="ControlsGrid" type="GridContainer" parent="Panel/Content"]
+layout_mode = 2
+columns = 2
+
+[node name="move_forwardButton" type="Button" parent="Panel/Content/ControlsGrid"]
+custom_minimum_size = Vector2(280, 36)
+layout_mode = 2
+text = "Avanzar: W"
+
+[node name="move_backwardButton" type="Button" parent="Panel/Content/ControlsGrid"]
+custom_minimum_size = Vector2(280, 36)
+layout_mode = 2
+text = "Retroceder: S"
+
+[node name="move_leftButton" type="Button" parent="Panel/Content/ControlsGrid"]
+custom_minimum_size = Vector2(280, 36)
+layout_mode = 2
+text = "Izquierda: A"
+
+[node name="move_rightButton" type="Button" parent="Panel/Content/ControlsGrid"]
+custom_minimum_size = Vector2(280, 36)
+layout_mode = 2
+text = "Derecha: D"
+
+[node name="runButton" type="Button" parent="Panel/Content/ControlsGrid"]
+custom_minimum_size = Vector2(280, 36)
+layout_mode = 2
+text = "Correr: Shift"
+
+[node name="interactButton" type="Button" parent="Panel/Content/ControlsGrid"]
+custom_minimum_size = Vector2(280, 36)
+layout_mode = 2
+text = "Interactuar: E"
+
+[node name="pauseButton" type="Button" parent="Panel/Content/ControlsGrid"]
+custom_minimum_size = Vector2(280, 36)
+layout_mode = 2
+text = "Pausa: Esc"
+
+[node name="WaitingLabel" type="Label" parent="Panel/Content"]
+layout_mode = 2
+text = "Selecciona una acción para reasignar."
+horizontal_alignment = 1
+
+[node name="ButtonRow" type="HBoxContainer" parent="Panel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ResetButton" type="Button" parent="Panel/Content/ButtonRow"]
+custom_minimum_size = Vector2(190, 40)
+layout_mode = 2
+text = "Restaurar controles"
+
+[node name="BackButton" type="Button" parent="Panel/Content/ButtonRow"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+text = "Volver"

@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_pause_script"]
+[ext_resource type="StyleBox" path="res://assets/ui/panel_bg.tres" id="2_panel_bg"]
+
+[node name="PauseMenu" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1_pause_script")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.42)
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -190.0
+offset_top = -140.0
+offset_right = 190.0
+offset_bottom = 140.0
+theme_override_styles/panel = ExtResource("2_panel_bg")
+
+[node name="MenuButtons" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Title" type="Label" parent="Panel/MenuButtons"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Pausa"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="Panel/MenuButtons"]
+custom_minimum_size = Vector2(260, 42)
+layout_mode = 2
+text = "Continuar"
+
+[node name="SettingsButton" type="Button" parent="Panel/MenuButtons"]
+custom_minimum_size = Vector2(260, 42)
+layout_mode = 2
+text = "Ajustes"
+
+[node name="MainMenuButton" type="Button" parent="Panel/MenuButtons"]
+custom_minimum_size = Vector2(260, 42)
+layout_mode = 2
+text = "Volver al menú"

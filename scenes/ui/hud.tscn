@@ -1,0 +1,164 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/heart_full.svg" id="2_heart_full"]
+[ext_resource type="Texture2D" path="res://assets/ui/animal_icon.svg" id="3_animal_icon"]
+[ext_resource type="StyleBox" path="res://assets/ui/panel_bg.tres" id="4_panel_bg"]
+[ext_resource type="StyleBox" path="res://assets/ui/alert_panel_bg.tres" id="5_alert_bg"]
+[ext_resource type="StyleBox" path="res://assets/ui/oxygen_bar_bg.tres" id="6_oxygen_bg"]
+[ext_resource type="StyleBox" path="res://assets/ui/oxygen_bar_fill.tres" id="7_oxygen_fill"]
+
+[node name="UI" type="CanvasLayer"]
+script = ExtResource("1_hud_script")
+
+[node name="TopLeft" type="PanelContainer" parent="."]
+offset_left = 18.0
+offset_top = 16.0
+offset_right = 176.0
+offset_bottom = 74.0
+theme_override_styles/panel = ExtResource("4_panel_bg")
+
+[node name="HeartsContainer" type="HBoxContainer" parent="TopLeft"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Heart1" type="TextureRect" parent="TopLeft/HeartsContainer"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+texture = ExtResource("2_heart_full")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Heart2" type="TextureRect" parent="TopLeft/HeartsContainer"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+texture = ExtResource("2_heart_full")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Heart3" type="TextureRect" parent="TopLeft/HeartsContainer"]
+custom_minimum_size = Vector2(38, 38)
+layout_mode = 2
+texture = ExtResource("2_heart_full")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TopRight" type="Control" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -286.0
+offset_top = 16.0
+offset_right = -18.0
+offset_bottom = 112.0
+
+[node name="ObjectivePanel" type="PanelContainer" parent="TopRight"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_styles/panel = ExtResource("4_panel_bg")
+
+[node name="Content" type="VBoxContainer" parent="TopRight/ObjectivePanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="AnimalRow" type="HBoxContainer" parent="TopRight/ObjectivePanel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AnimalIcon" type="TextureRect" parent="TopRight/ObjectivePanel/Content/AnimalRow"]
+visible = false
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+texture = ExtResource("3_animal_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LabelAnimals" type="Label" parent="TopRight/ObjectivePanel/Content/AnimalRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Animales 0 / 10"
+vertical_alignment = 1
+
+[node name="LabelProgress" type="Label" parent="TopRight/ObjectivePanel/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Progresión 1 / 3"
+
+[node name="CenterAlert" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -64.0
+offset_right = 300.0
+offset_bottom = 64.0
+theme_override_styles/panel = ExtResource("5_alert_bg")
+
+[node name="LabelAlert" type="Label" parent="CenterAlert"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.88, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 34
+text = "¡El Diablo ha salido de la cueva!"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="OxygenPanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -180.0
+offset_top = -150.0
+offset_right = 180.0
+offset_bottom = -100.0
+theme_override_styles/panel = ExtResource("4_panel_bg")
+
+[node name="OxygenContent" type="VBoxContainer" parent="OxygenPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="LabelOxygen" type="Label" parent="OxygenPanel/OxygenContent"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Oxigeno"
+horizontal_alignment = 1
+
+[node name="OxygenBar" type="ProgressBar" parent="OxygenPanel/OxygenContent"]
+custom_minimum_size = Vector2(320, 16)
+layout_mode = 2
+theme_override_styles/background = ExtResource("6_oxygen_bg")
+theme_override_styles/fill = ExtResource("7_oxygen_fill")
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="MessagePanel" type="PanelContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -82.0
+offset_right = 320.0
+offset_bottom = -28.0
+theme_override_styles/panel = ExtResource("4_panel_bg")
+
+[node name="LabelMessage" type="Label" parent="MessagePanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Lleva animales al corral"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
