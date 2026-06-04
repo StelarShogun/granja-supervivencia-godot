@@ -28,7 +28,7 @@
 [ext_resource type="Script" uid="uid://dtybnog1lvfsx" path="res://scripts/world/lake_generator.gd" id="16_x5gqu"]
 [ext_resource type="Material" path="res://materials/MAT_Lake_Water.tres" id="17_8qayg"]
 [ext_resource type="Script" uid="uid://brwqfqr0dti1m" path="res://scripts/core/sky_controller.gd" id="17_sky_ctl"]
-[ext_resource type="Script" path="res://scripts/world/underwater_effect.gd" id="29_ygu70"]
+[ext_resource type="Script" uid="uid://g4apt64qoyau" path="res://scripts/world/underwater_effect.gd" id="29_ygu70"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_masl8"]
 shader = ExtResource("1_ysjpo")
@@ -83,8 +83,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.09458985, 0.09458985)
-shader_parameter/cirrus_position2 = Vector2(0.09458985, 0.09458985)
+shader_parameter/cirrus_position1 = Vector2(0.53950185, 0.53950185)
+shader_parameter/cirrus_position2 = Vector2(0.53950185, 0.53950185)
 shader_parameter/cirrus_texture = ExtResource("2_gexqn")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -94,7 +94,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(10.483035, 10.483035)
+shader_parameter/cumulus_position = Vector2(27.774134, 27.774134)
 shader_parameter/cumulus_texture = ExtResource("3_kc8j3")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -557,7 +557,7 @@ script = ExtResource("15_safe_zone")
 shape = SubResource("BoxShape3D_safe_corral_zone")
 
 [node name="Player" parent="." unique_id=728367598 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 98.41655, 13.35, -65.95974)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 111.95245, 5.300617, -124.17808)
 
 [node name="Diablo" parent="." unique_id=1782360643 instance=ExtResource("3_diablo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 145.6532, 99.3, 132.13414)
