@@ -95,6 +95,13 @@ func start_new_game() -> void:
 	_used_spawn_indices.clear()
 	_spawned_animals.clear()
 
+	# Kojima: shorter Diablo spawn window, show mode notice
+	if SaveManager.game_mode == 1:
+		diablo_spawn_delay = 20.0
+		show_message("Modo Kojima activado. El Diablo viene.", 4.0)
+	else:
+		diablo_spawn_delay = 60.0
+
 	var player := get_node_or_null(player_path)
 	var player_spawn := get_node_or_null("../SpawnPoints/Player_Spawn") as Node3D
 	if player != null and player_spawn != null:
@@ -131,7 +138,14 @@ func continue_game(data: Dictionary) -> void:
 	var player := get_node_or_null(player_path) as Node3D
 	var pos_data = data.get("player_position", null)
 	if player != null and pos_data is Array and pos_data.size() == 3:
-		player.global_position = Vector3(float(pos_data[0]), float(pos_data[1]), float(pos_data[2]))
+		var restored := Vector3(float(pos_data[0]), float(pos_data[1]), float(pos_data[2]))
+		# Reject saved positions that are underwater or out of bounds
+		if restored.y > -2.0 and restored.length() < 300.0:
+			player.global_position = restored
+		else:
+			var spawn := get_node_or_null("../SpawnPoints/Player_Spawn") as Node3D
+			if spawn != null:
+				player.global_position = spawn.global_position
 
 	update_progression(false)
 	spawn_animals()
@@ -367,13 +381,14 @@ func _objective_message() -> String:
 	if game_over:
 		return "Derrota: El Diablo te alcanzo tres veces."
 
+	var carry_hint := " (1 a la vez, de noche)" if SaveManager.game_mode == 1 else ""
 	match current_progress:
 		1:
-			return "Recolecta animales y llévalos al corral."
+			return "Recolecta animales y llévalos al corral." + carry_hint
 		2:
-			return "Progresión 2: lleva 6 animales al corral."
+			return "Progresión 2: lleva 6 animales al corral." + carry_hint
 		_:
-			return "Progresión 3: completa 10 animales en el corral."
+			return "Progresión 3: completa 10 animales en el corral." + carry_hint
 
 
 func win_game() -> void:
@@ -385,6 +400,9 @@ func win_game() -> void:
 	_update_diablo_speed()
 	update_ui()
 	save_current_game()
+	var vs := get_node_or_null("../VictoryScreen")
+	if vs != null and vs.has_method("show_victory"):
+		vs.show_victory(animals_in_corral, score)
 
 
 func lose_game() -> void:

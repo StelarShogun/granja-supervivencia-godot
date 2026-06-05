@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://blbluf43jc54l"
+path="res://.godot/imported/compute_fluid.glsl-975f864ab411b70a5a9e141d1a727229.res"
+
+[deps]
+
+source_file="res://Godot-3D-SPH-Fluid-Simulation-5b992e3415505b1e413bd708d3cf579c3ec61dfd/addons/SPH_3d_fluid_simulation/compute_shaders/compute_fluid.glsl"
+dest_files=["res://.godot/imported/compute_fluid.glsl-975f864ab411b70a5a9e141d1a727229.res"]
+
+[params]
+

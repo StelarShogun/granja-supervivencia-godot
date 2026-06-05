@@ -8,6 +8,10 @@ extends Node
 var running: bool = true
 
 
+func _ready() -> void:
+	add_to_group("day_night_cycle")
+
+
 func _process(delta: float) -> void:
 	if not running or day_length_seconds <= 0.0:
 		return

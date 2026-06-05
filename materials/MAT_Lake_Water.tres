@@ -1,11 +1,14 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+[gd_resource type="ShaderMaterial" format=3 uid="uid://bnsvkvmgcawhe"]
 
-[ext_resource type="Shader" path="res://shaders/lake_water.gdshader" id="1_lake_shader"]
+[ext_resource type="Shader" uid="uid://bcji85rbbonmq" path="res://shaders/lake_water.gdshader" id="1_lake_shader"]
 
 [resource]
+render_priority = 0
 shader = ExtResource("1_lake_shader")
-shader_parameter/lake_color = Color(0.10, 0.40, 0.48, 0.58)
-shader_parameter/deep_color = Color(0.03, 0.19, 0.27, 0.70)
+shader_parameter/lake_color = Color(0.1, 0.4, 0.48, 0.55)
+shader_parameter/deep_color = Color(0.02, 0.16, 0.24, 1)
 shader_parameter/shore_glint = Color(0.62, 0.88, 0.82, 0.34)
+shader_parameter/depth_distance = 5.0
+shader_parameter/shore_fade = 0.45
 shader_parameter/wave_speed = 0.08
 shader_parameter/wave_height = 0.04

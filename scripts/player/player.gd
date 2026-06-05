@@ -33,7 +33,11 @@ var camera_enabled: bool = true
 var is_in_water: bool = false
 var oxygen: float = 100.0
 
+## Animal being carried in Kojima mode (null = not carrying)
+var carried_animal: Node = null
+
 var _invulnerability_left: float = 0.0
+var _frozen_left: float = 0.0
 var _mud_slow_left: float = 0.0
 var _drowning_damage_left: float = 0.0
 var _water_surface_y: float = 0.0
@@ -88,6 +92,14 @@ func _physics_process(delta: float) -> void:
 
 	var manager := _get_game_manager()
 	if manager != null and bool(manager.get("game_over")):
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_apply_gravity(delta)
+		move_and_slide()
+		return
+
+	# Magic freeze: player cannot move but gravity still applies
+	if _frozen_left > 0.0:
 		velocity.x = 0.0
 		velocity.z = 0.0
 		_apply_gravity(delta)
@@ -181,6 +193,37 @@ func receive_damage() -> bool:
 	return true
 
 
+func apply_freeze(duration: float) -> void:
+	_frozen_left = maxf(_frozen_left, duration)
+
+
+func pickup_animal(animal: Node) -> bool:
+	if carried_animal != null:
+		var manager := _get_game_manager()
+		if manager != null and manager.has_method("show_message"):
+			manager.show_message("Ya llevas un animal. Llévalo al corral primero.", 2.0)
+		return false
+	carried_animal = animal
+	var manager2 := _get_game_manager()
+	if manager2 != null and manager2.has_method("show_message"):
+		manager2.show_message("Llevando 1 animal. Ve al corral.", 2.0)
+	return true
+
+
+func drop_animal() -> void:
+	if carried_animal == null:
+		return
+	if carried_animal.has_method("drop"):
+		carried_animal.drop(global_position + Vector3(1.5, 0.0, 0.0))
+	carried_animal = null
+
+
+func deliver_animal() -> Node:
+	var a := carried_animal
+	carried_animal = null
+	return a
+
+
 func slow_down(seconds: float) -> void:
 	apply_mud_slow(0.45, seconds)
 
@@ -265,6 +308,9 @@ func _update_timers(delta: float) -> void:
 		_invulnerability_left -= delta
 		if _invulnerability_left <= 0.0:
 			invulnerable = false
+
+	if _frozen_left > 0.0:
+		_frozen_left -= delta
 
 	if _mud_slow_left > 0.0:
 		_mud_slow_left -= delta

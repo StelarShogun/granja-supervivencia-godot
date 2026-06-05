@@ -22,8 +22,35 @@ func interact(_player: Node) -> void:
 
 
 func _on_body_entered(body: Node3D) -> void:
-	if body.is_in_group("player"):
+	if not body.is_in_group("player"):
+		return
+	if SaveManager.game_mode == 1:
+		_try_receive_animal(body)
+	else:
 		_show_count_message()
+
+
+func _try_receive_animal(player: Node) -> void:
+	if not player.has_method("deliver_animal"):
+		_show_count_message()
+		return
+	var animal: Node = player.deliver_animal()
+	if animal == null:
+		_show_count_message()
+		return
+	# Score the delivered animal
+	var manager := _get_game_manager()
+	if manager != null and manager.has_method("collect_animal"):
+		var pts: int = int(animal.get("points")) if animal.has_method("get") else 100
+		if animal.has_method("_collect"):
+			pass
+		# Mark collected manually
+		if animal.has_method("get"):
+			animal.set("collected", true)
+			animal.set("_following", false)
+		animal.hide()
+		animal.call_deferred("queue_free")
+		manager.collect_animal(pts, animal)
 
 
 func _show_count_message() -> void:
@@ -35,7 +62,6 @@ func _show_count_message() -> void:
 func _get_game_manager() -> Node:
 	if game_manager_path != NodePath("") and has_node(game_manager_path):
 		return get_node(game_manager_path)
-
 	var managers := get_tree().get_nodes_in_group("game_manager")
 	if managers.size() > 0:
 		return managers[0]

@@ -1,12 +1,15 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+[gd_resource type="ShaderMaterial" format=3 uid="uid://cem67baikoyja"]
 
-[ext_resource type="Shader" path="res://shaders/river_flow.gdshader" id="1_river_shader"]
+[ext_resource type="Shader" uid="uid://cyryaylfcdbut" path="res://shaders/river_flow.gdshader" id="1_river_shader"]
 
 [resource]
+render_priority = 0
 shader = ExtResource("1_river_shader")
-shader_parameter/shallow_color = Color(0.16, 0.48, 0.44, 0.62)
-shader_parameter/deep_color = Color(0.04, 0.25, 0.32, 0.74)
+shader_parameter/shallow_color = Color(0.16, 0.46, 0.44, 0.55)
+shader_parameter/deep_color = Color(0.03, 0.2, 0.26, 1)
 shader_parameter/foam_color = Color(0.82, 0.95, 0.88, 0.55)
+shader_parameter/depth_distance = 2.5
+shader_parameter/bank_fade = 0.4
 shader_parameter/flow_speed = 0.18
-shader_parameter/ripple_strength = 0.055
-shader_parameter/foam_edge = 0.18
+shader_parameter/ripple_strength = 0.04
+shader_parameter/foam_edge = 0.16

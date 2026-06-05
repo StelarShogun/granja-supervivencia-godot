@@ -2,6 +2,9 @@ extends Node
 
 const SAVE_PATH := "user://savegame.json"
 
+## 0 = Normal, 1 = Kojima
+static var game_mode: int = 0
+
 var pending_save_data: Dictionary = {}
 
 
