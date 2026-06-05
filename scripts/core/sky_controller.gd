@@ -21,12 +21,14 @@ extends Node
 @export var moon_energy: float = 0.35
 
 @export_group("Fog")
-## Fog stays off by default. The previous runtime fog path could make the game
-## camera look grey even when the editor viewport showed the sky correctly.
-@export var fog_enabled: bool = false
-@export var fog_density: float = 0.0
-@export var fog_light_color: Color = Color(0.7, 0.78, 0.82)
-@export var fog_light_energy: float = 0.2
+## Depth fog hides map edges and blends with the horizon ring. Sky3D mesh fog stays off.
+@export var fog_enabled: bool = true
+@export var fog_depth_begin: float = 90.0
+@export var fog_depth_end: float = 300.0
+@export var fog_density: float = 0.001
+@export var fog_light_color: Color = Color(0.62, 0.74, 0.68)
+@export var fog_light_energy: float = 0.35
+@export_range(0.0, 1.0, 0.01) var fog_aerial_perspective: float = 0.72
 
 var _fog_cleanup_frames: int = 8
 
@@ -65,9 +67,13 @@ func _apply_sky_config() -> void:
 		return
 	env.background_mode = Environment.BG_SKY
 	env.fog_enabled = fog_enabled
+	env.fog_mode = Environment.FOG_MODE_DEPTH
+	env.fog_depth_begin = fog_depth_begin
+	env.fog_depth_end = fog_depth_end
 	env.fog_density = fog_density
 	env.fog_light_color = fog_light_color
 	env.fog_light_energy = fog_light_energy
+	env.fog_aerial_perspective = fog_aerial_perspective
 	env.volumetric_fog_enabled = false
 
 

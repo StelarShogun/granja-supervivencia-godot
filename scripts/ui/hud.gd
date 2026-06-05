@@ -1,13 +1,10 @@
 extends CanvasLayer
 
-@export var heart_full: Texture2D = preload("res://assets/ui/heart_full.svg")
-@export var heart_empty: Texture2D = preload("res://assets/ui/heart_empty.svg")
-
 var _alert_token: int = 0
 var _objective_pinned: bool = false
 var _has_temp_message: bool = false
 
-@onready var _hearts_container: HBoxContainer = $TopLeft/HeartsContainer
+@onready var _health_bar: ProgressBar = $TopLeft/HealthContent/HealthBar
 @onready var _label_animals: Label = $TopRight/ObjectivePanel/Content/AnimalRow/LabelAnimals
 @onready var _label_progress: Label = $TopRight/ObjectivePanel/Content/LabelProgress
 @onready var _label_message: Label = $MessagePanel/LabelMessage
@@ -22,7 +19,7 @@ func _ready() -> void:
 	_center_alert.hide()
 	_oxygen_panel.hide()
 	_message_panel.hide()
-	set_lives(3)
+	set_health(100.0, 100.0)
 	set_animals(0, 10)
 	set_progress(1)
 	set_oxygen(100.0, 100.0)
@@ -36,11 +33,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+func set_health(value: float, max_value: float) -> void:
+	if _health_bar == null:
+		return
+	_health_bar.max_value = maxf(max_value, 1.0)
+	_health_bar.value = clampf(value, 0.0, _health_bar.max_value)
+
+
 func set_lives(value: int) -> void:
-	for i in _hearts_container.get_child_count():
-		var heart := _hearts_container.get_child(i) as TextureRect
-		if heart != null:
-			heart.texture = heart_full if i < value else heart_empty
+	set_health(float(value) * (100.0 / 3.0), 100.0)
 
 
 func set_animals(value: int, goal: int) -> void:
@@ -51,14 +52,12 @@ func set_progress(value: int) -> void:
 	_label_progress.text = "Progresión %d / 3" % value
 
 
-# Force-shows the panel (for temporary game-event messages)
 func set_message(text: String) -> void:
 	_label_message.text = text
 	_has_temp_message = true
 	_message_panel.show()
 
 
-# Updates text without forcing panel open (respects F-key state)
 func show_objective(text: String) -> void:
 	_label_message.text = text
 	_has_temp_message = false
@@ -89,21 +88,6 @@ func show_center_alert(text: String, seconds: float = 4.0) -> void:
 	await get_tree().create_timer(seconds).timeout
 	if token == _alert_token:
 		_center_alert.hide()
-
-
-func update_status(
-	lives: int,
-	_score: int,
-	animals_in_corral: int,
-	animal_goal: int,
-	current_progress: int,
-	_max_progress: int,
-	message: String
-) -> void:
-	set_lives(lives)
-	set_animals(animals_in_corral, animal_goal)
-	set_progress(current_progress)
-	set_message(message)
 
 
 func _ensure_oxygen_refs() -> void:

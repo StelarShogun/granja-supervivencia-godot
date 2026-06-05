@@ -1,16 +1,14 @@
 extends Node
 
 const ANIMAL_GOAL := 10
-const SCORE_PER_ANIMAL := 100
 
-@export var lives: int = 3
-@export var score: int = 0
 @export var animals_in_corral: int = 0
 @export var current_progress: int = 1
 @export var player_path: NodePath = NodePath("../Player")
 @export var diablo_path: NodePath = NodePath("../Diablo")
 @export var ui_path: NodePath = NodePath("../UI")
 @export var pause_menu_path: NodePath = NodePath("../PauseMenu")
+@export var defeat_screen_path: NodePath = NodePath("../DefeatScreen")
 @export var corral_zone_path: NodePath = NodePath("../SpawnPoints/CorralZone")
 @export var safe_corral_zone_path: NodePath = NodePath("../SpawnPoints/SafeCorralZone")
 @export var animal_spawn_path: NodePath = NodePath("../SpawnPoints/AnimalSpawns")
@@ -26,6 +24,7 @@ var game_over: bool = false
 var victory: bool = false
 var diablo_spawned: bool = false
 var player_in_safe_zone: bool = false
+var player_entered_cave: bool = false
 var elapsed_time: float = 0.0
 
 var _current_message: String = ""
@@ -79,8 +78,6 @@ func start_game() -> void:
 
 func start_new_game() -> void:
 	_clear_animals()
-	lives = 3
-	score = 0
 	animals_in_corral = 0
 	current_progress = 1
 	game_started = true
@@ -88,6 +85,7 @@ func start_new_game() -> void:
 	victory = false
 	diablo_spawned = false
 	player_in_safe_zone = false
+	player_entered_cave = false
 	elapsed_time = 0.0
 	_current_message = ""
 	_message_time_left = 0.0
@@ -95,10 +93,9 @@ func start_new_game() -> void:
 	_used_spawn_indices.clear()
 	_spawned_animals.clear()
 
-	# Kojima: shorter Diablo spawn window, show mode notice
 	if SaveManager.game_mode == 1:
 		diablo_spawn_delay = 20.0
-		show_message("Modo Kojima activado. El Diablo viene.", 4.0)
+		show_message("Modo difícil activado. El Diablo viene.", 4.0)
 	else:
 		diablo_spawn_delay = 60.0
 
@@ -106,6 +103,8 @@ func start_new_game() -> void:
 	var player_spawn := get_node_or_null("../SpawnPoints/Player_Spawn") as Node3D
 	if player != null and player_spawn != null:
 		(player as Node3D).global_position = player_spawn.global_position
+	if player != null and player.has_method("reset_health"):
+		player.reset_health()
 	if player != null and player.has_method("capture_mouse"):
 		player.capture_mouse()
 
@@ -124,28 +123,37 @@ func start_new_game() -> void:
 
 
 func continue_game(data: Dictionary) -> void:
+	SaveManager.game_mode = int(data.get("game_mode", SaveManager.game_mode))
 	start_new_game()
-	lives = int(data.get("lives", 3))
 	animals_in_corral = int(data.get("animals_in_corral", 0))
 	current_progress = int(data.get("current_progress", 1))
 	elapsed_time = float(data.get("elapsed_time", 0.0))
 	diablo_spawned = bool(data.get("diablo_spawned", false))
+	player_entered_cave = bool(data.get("player_entered_cave", false))
 	player_in_safe_zone = false
 	_used_spawn_indices.clear()
 	for i in mini(animals_in_corral, 10):
 		_used_spawn_indices[i] = true
 
-	var player := get_node_or_null(player_path) as Node3D
+	var player := get_node_or_null(player_path)
+	if player != null:
+		if data.has("health"):
+			player.health = clampf(float(data.get("health", 100.0)), 0.0, player.MAX_HEALTH)
+		elif data.has("lives"):
+			player.health = clampf((float(data.get("lives", 3)) / 3.0) * player.MAX_HEALTH, 0.0, player.MAX_HEALTH)
+		if player.has_method("_publish_health_ui"):
+			player._publish_health_ui()
+
+	var player_3d := player as Node3D
 	var pos_data = data.get("player_position", null)
-	if player != null and pos_data is Array and pos_data.size() == 3:
+	if player_3d != null and pos_data is Array and pos_data.size() == 3:
 		var restored := Vector3(float(pos_data[0]), float(pos_data[1]), float(pos_data[2]))
-		# Reject saved positions that are underwater or out of bounds
 		if restored.y > -2.0 and restored.length() < 300.0:
-			player.global_position = restored
+			player_3d.global_position = restored
 		else:
 			var spawn := get_node_or_null("../SpawnPoints/Player_Spawn") as Node3D
 			if spawn != null:
-				player.global_position = spawn.global_position
+				player_3d.global_position = spawn.global_position
 
 	update_progression(false)
 	spawn_animals()
@@ -160,7 +168,7 @@ func continue_game(data: Dictionary) -> void:
 	update_ui()
 
 
-func collect_animal(points: int = SCORE_PER_ANIMAL, source_animal: Node = null) -> void:
+func collect_animal(source_animal: Node = null) -> void:
 	if game_over or victory:
 		return
 
@@ -168,7 +176,6 @@ func collect_animal(points: int = SCORE_PER_ANIMAL, source_animal: Node = null) 
 		_spawned_animals.erase(source_animal)
 
 	animals_in_corral += 1
-	score += points
 	_prune_spawned_animals()
 
 	var old_progress := current_progress
@@ -183,23 +190,10 @@ func collect_animal(points: int = SCORE_PER_ANIMAL, source_animal: Node = null) 
 	save_current_game()
 
 
-func player_hit() -> void:
-	if game_over or victory:
-		return
-
-	lives -= 1
-	if lives <= 0:
-		lives = 0
-		lose_game()
-	else:
-		show_message("Perdiste una vida. Evita a El Diablo.", 2.0)
-
+func on_player_health_changed(_current: float, _maximum: float) -> void:
 	update_ui()
-	save_current_game()
-
-
-func player_lost_life() -> void:
-	player_hit()
+	if _current > 0.0 and _current < _maximum * 0.35:
+		show_message("Vida baja. Busca un Cacique.", 2.0)
 
 
 func show_message(message: String, duration: float = 2.0) -> void:
@@ -273,7 +267,6 @@ func spawn_diablo_after_delay(request_id: int = 0) -> void:
 	var wait_time := maxf(0.0, diablo_spawn_delay - elapsed_time)
 	if wait_time > 0.0:
 		await get_tree().create_timer(wait_time).timeout
-	# Normal mode: wait until night so Diablo is immediately visible when he spawns
 	if SaveManager.game_mode == 0:
 		while not _is_night():
 			if local_request != _spawn_request_id or not game_started or game_over:
@@ -344,22 +337,29 @@ func _update_diablo_speed() -> void:
 
 func update_ui() -> void:
 	var ui := get_node_or_null(ui_path)
-	if ui != null and ui.has_method("set_lives"):
-		ui.set_lives(lives)
-		ui.set_animals(animals_in_corral, ANIMAL_GOAL)
-		ui.set_progress(current_progress)
+	var player := get_node_or_null(player_path)
+	if ui != null:
+		if player != null and ui.has_method("set_health"):
+			ui.set_health(float(player.get("health")), float(player.get("MAX_HEALTH")))
+		if ui.has_method("set_animals"):
+			ui.set_animals(animals_in_corral, ANIMAL_GOAL)
+		if ui.has_method("set_progress"):
+			ui.set_progress(current_progress)
 		if _message_time_left > 0.0:
-			ui.set_message(_current_message)
+			if ui.has_method("set_message"):
+				ui.set_message(_current_message)
 		elif ui.has_method("show_objective"):
 			ui.show_objective(_current_message)
-		else:
-			ui.set_message(_current_message)
-	elif ui != null and ui.has_method("update_status"):
-		ui.update_status(lives, score, animals_in_corral, ANIMAL_GOAL, current_progress, 3, _current_message)
 
 	var corral := get_node_or_null(corral_zone_path)
 	if corral != null and corral.has_method("set_count"):
 		corral.set_count(animals_in_corral, ANIMAL_GOAL)
+
+
+func update_player_health(value: float, max_value: float) -> void:
+	var ui := get_node_or_null(ui_path)
+	if ui != null and ui.has_method("set_health"):
+		ui.set_health(value, max_value)
 
 
 func update_player_oxygen(value: float, max_value: float, visible: bool) -> void:
@@ -384,6 +384,13 @@ func set_player_safe_zone(value: bool) -> void:
 		show_message("Saliste de la zona segura.", 1.6)
 
 
+func set_player_entered_cave(value: bool) -> void:
+	if player_entered_cave == value:
+		return
+	player_entered_cave = value
+	save_current_game()
+
+
 func is_player_in_safe_zone() -> bool:
 	return player_in_safe_zone
 
@@ -397,7 +404,7 @@ func _objective_message() -> String:
 	if victory:
 		return "Victoria: reuniste 10 animales en el corral."
 	if game_over:
-		return "Derrota: El Diablo te alcanzo tres veces."
+		return "Derrota: te quedaste sin vida."
 
 	var carry_hint := " (1 animal a la vez)" if SaveManager.game_mode == 1 else ""
 	match current_progress:
@@ -420,15 +427,20 @@ func win_game() -> void:
 	save_current_game()
 	var vs := get_node_or_null("../VictoryScreen")
 	if vs != null and vs.has_method("show_victory"):
-		vs.show_victory(animals_in_corral, score)
+		vs.show_victory(animals_in_corral)
 
 
 func lose_game() -> void:
+	if game_over:
+		return
 	victory = false
 	game_over = true
 	_restore_objective_message()
 	update_ui()
 	save_current_game()
+	var ds := get_node_or_null(defeat_screen_path)
+	if ds != null and ds.has_method("show_defeat"):
+		ds.show_defeat()
 
 
 func toggle_pause() -> void:
@@ -463,15 +475,20 @@ func save_current_game() -> void:
 		return
 	var player := get_node_or_null(player_path) as Node3D
 	var player_position := [0.0, 0.0, 0.0]
+	var health_value := 100.0
 	if player != null:
 		player_position = [player.global_position.x, player.global_position.y, player.global_position.z]
+		if player.get("health") != null:
+			health_value = float(player.get("health"))
 	SaveManager.save_game({
-		"lives": lives,
+		"health": health_value,
+		"game_mode": SaveManager.game_mode,
 		"animals_in_corral": animals_in_corral,
 		"current_progress": current_progress,
 		"player_position": player_position,
 		"elapsed_time": elapsed_time,
 		"diablo_spawned": diablo_spawned,
+		"player_entered_cave": player_entered_cave,
 	})
 
 

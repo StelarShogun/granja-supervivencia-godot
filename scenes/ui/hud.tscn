@@ -1,7 +1,6 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud_script"]
-[ext_resource type="Texture2D" path="res://assets/ui/heart_full.svg" id="2_heart_full"]
 [ext_resource type="Texture2D" path="res://assets/ui/animal_icon.svg" id="3_animal_icon"]
 [ext_resource type="StyleBox" path="res://assets/ui/panel_bg.tres" id="4_panel_bg"]
 [ext_resource type="StyleBox" path="res://assets/ui/alert_panel_bg.tres" id="5_alert_bg"]
@@ -14,34 +13,27 @@ script = ExtResource("1_hud_script")
 [node name="TopLeft" type="PanelContainer" parent="."]
 offset_left = 18.0
 offset_top = 16.0
-offset_right = 176.0
-offset_bottom = 74.0
+offset_right = 220.0
+offset_bottom = 82.0
 theme_override_styles/panel = ExtResource("4_panel_bg")
 
-[node name="HeartsContainer" type="HBoxContainer" parent="TopLeft"]
+[node name="HealthContent" type="VBoxContainer" parent="TopLeft"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
-[node name="Heart1" type="TextureRect" parent="TopLeft/HeartsContainer"]
-custom_minimum_size = Vector2(38, 38)
+[node name="LabelHealth" type="Label" parent="TopLeft/HealthContent"]
 layout_mode = 2
-texture = ExtResource("2_heart_full")
-expand_mode = 1
-stretch_mode = 5
+theme_override_font_sizes/font_size = 16
+text = "Vida"
 
-[node name="Heart2" type="TextureRect" parent="TopLeft/HeartsContainer"]
-custom_minimum_size = Vector2(38, 38)
+[node name="HealthBar" type="ProgressBar" parent="TopLeft/HealthContent"]
+custom_minimum_size = Vector2(180, 16)
 layout_mode = 2
-texture = ExtResource("2_heart_full")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Heart3" type="TextureRect" parent="TopLeft/HeartsContainer"]
-custom_minimum_size = Vector2(38, 38)
-layout_mode = 2
-texture = ExtResource("2_heart_full")
-expand_mode = 1
-stretch_mode = 5
+theme_override_styles/background = ExtResource("6_oxygen_bg")
+theme_override_styles/fill = ExtResource("7_oxygen_fill")
+max_value = 100.0
+value = 100.0
+show_percentage = false
 
 [node name="TopRight" type="Control" parent="."]
 anchors_preset = 1

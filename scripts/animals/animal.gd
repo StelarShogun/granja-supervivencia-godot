@@ -1,6 +1,5 @@
 extends Area3D
 
-@export var points: int = 100
 @export var game_manager_path: NodePath = NodePath("../../GameManager")
 @export var wander_speed: float = 1.8
 @export var wander_radius: float = 120.0
@@ -12,8 +11,6 @@ var collected: bool = false
 var _wander_target: Vector3
 var _wander_timer: float = 0.0
 var _has_start: bool = false
-
-# Kojima mode: animal follows carrier
 var _following: bool = false
 var _follow_target: Node3D = null
 
@@ -68,10 +65,7 @@ func _pick_wander_target() -> void:
 
 func interact(player: Node) -> void:
 	if player != null and player.is_in_group("player"):
-		if SaveManager.game_mode == 1:
-			_try_pickup(player)
-		else:
-			_collect()
+		_try_pickup(player)
 
 
 func pickup(player: Node) -> void:
@@ -85,13 +79,22 @@ func drop(drop_position: Vector3) -> void:
 	_wander_target = drop_position
 
 
+func register_in_corral() -> void:
+	if collected:
+		return
+	collected = true
+	_following = false
+	_follow_target = null
+	monitoring = false
+	monitorable = false
+	hide()
+	call_deferred("queue_free")
+
+
 func _on_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("player"):
 		return
-	if SaveManager.game_mode == 1:
-		_try_pickup(body)
-	else:
-		_collect()
+	_try_pickup(body)
 
 
 func _try_pickup(player: Node) -> void:
@@ -102,23 +105,7 @@ func _try_pickup(player: Node) -> void:
 		if ok:
 			_following = true
 			_follow_target = player as Node3D
-			monitoring = false
-
-
-func _collect() -> void:
-	if collected:
-		return
-
-	collected = true
-	monitoring = false
-	monitorable = false
-
-	var manager := _get_game_manager()
-	if manager != null and manager.has_method("collect_animal"):
-		manager.collect_animal(points, self)
-
-	hide()
-	call_deferred("queue_free")
+			set_deferred("monitoring", false)
 
 
 func _get_game_manager() -> Node:

@@ -5,15 +5,27 @@ var debug_cam_3d = preload("res://addons/debug_camera/scripts/DebugCamera3D.gd")
 
 
 func _ready() -> void:
+	call_deferred("_setup")
+
+
+func _setup() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	var scene := tree.current_scene
+	if scene == null:
+		return
+
 	var cam_2d := debug_cam_2d.new()
 	var cam_3d := debug_cam_3d.new()
-	
-	get_tree().current_scene.tree_exited.connect(_new_scene)
-	
+
+	if not scene.tree_exited.is_connected(_new_scene):
+		scene.tree_exited.connect(_new_scene)
+
 	if get_viewport().get_camera_2d() != null:
-		get_tree().current_scene.add_child(cam_2d)
+		scene.add_child(cam_2d)
 	elif get_viewport().get_camera_3d() != null:
-		get_tree().current_scene.add_child(cam_3d)
+		scene.add_child(cam_3d)
 
 
 func _new_scene():

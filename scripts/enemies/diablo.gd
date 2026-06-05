@@ -6,7 +6,7 @@ extends CharacterBody3D
 
 ## Normal mode speeds per progress level (1/2/3)
 @export var speed_normal: Vector3 = Vector3(5.0, 7.0, 9.0)
-## Kojima mode speeds per progress level (1/2/3)
+## Modo difícil speeds per progress level (1/2/3)
 @export var speed_kojima: Vector3 = Vector3(15.0, 18.0, 22.0)
 
 @export var contact_cooldown: float = 0.8
@@ -69,7 +69,7 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	# Normal mode: hide during daytime; Kojima mode: always visible
+	# Normal mode: hide during daytime; modo difícil: always visible
 	if SaveManager.game_mode == 0:
 		var night := _is_night()
 		if not night and not _daylight_hidden:
@@ -187,7 +187,7 @@ func _on_hit_box_body_entered(body: Node3D) -> void:
 	if manager != null and _is_player_safe(manager):
 		return
 
-	# Kojima: drop carried animal on hit
+	# Modo difícil: drop carried animal on hit
 	if SaveManager.game_mode == 1 and body.has_method("drop_animal"):
 		body.drop_animal()
 

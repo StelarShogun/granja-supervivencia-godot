@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+const MAX_HEALTH := 100.0
+
 @export var walk_speed: float = 10.0
 @export var run_speed: float = 18.0
 @export var acceleration: float = 18.0
@@ -9,6 +11,8 @@ extends CharacterBody3D
 @export var camera_min_pitch: float = -55.0
 @export var camera_max_pitch: float = 35.0
 @export var invulnerability_time: float = 2.0
+@export var diablo_damage: float = 34.0
+@export var drowning_damage: float = 15.0
 @export var game_manager_path: NodePath = NodePath("../GameManager")
 @export var max_oxygen: float = 100.0
 @export var oxygen_drain_rate: float = 12.0
@@ -32,8 +36,9 @@ var speed_multiplier: float = 1.0
 var camera_enabled: bool = true
 var is_in_water: bool = false
 var oxygen: float = 100.0
+var health: float = MAX_HEALTH
 
-## Animal being carried in Kojima mode (null = not carrying)
+## Animal being carried (null = not carrying); modo difícil: 1 a la vez
 var carried_animal: Node = null
 
 var _invulnerability_left: float = 0.0
@@ -66,6 +71,7 @@ func _ready() -> void:
 	_interaction_area.area_exited.connect(_on_interaction_area_exited)
 	_interaction_area.body_entered.connect(_on_interaction_body_entered)
 	_interaction_area.body_exited.connect(_on_interaction_body_exited)
+	reset_health()
 	_publish_oxygen_ui()
 
 
@@ -179,18 +185,57 @@ func _can_stand() -> bool:
 	return space.intersect_ray(query).is_empty()
 
 
-func receive_damage() -> bool:
-	if invulnerable:
+func receive_damage(amount: float = -1.0) -> bool:
+	if invulnerable or health <= 0.0:
 		return false
 
+	if amount < 0.0:
+		amount = diablo_damage
+
+	health = maxf(0.0, health - amount)
 	invulnerable = true
 	_invulnerability_left = invulnerability_time
 
 	var manager := _get_game_manager()
-	if manager != null and manager.has_method("player_hit"):
-		manager.player_hit()
+	if manager != null:
+		if manager.has_method("on_player_health_changed"):
+			manager.on_player_health_changed(health, MAX_HEALTH)
+		if health <= 0.0 and manager.has_method("lose_game"):
+			manager.lose_game()
+		elif manager.has_method("show_message"):
+			manager.show_message("Recibiste daño. Busca un Cacique si necesitas curarte.", 1.8)
 
+	_publish_health_ui()
 	return true
+
+
+func heal(amount: float) -> void:
+	if health <= 0.0:
+		return
+	health = minf(MAX_HEALTH, health + amount)
+	_publish_health_ui()
+	var manager := _get_game_manager()
+	if manager != null and manager.has_method("on_player_health_changed"):
+		manager.on_player_health_changed(health, MAX_HEALTH)
+
+
+func reset_health() -> void:
+	health = MAX_HEALTH
+	invulnerable = false
+	_invulnerability_left = 0.0
+	_publish_health_ui()
+
+
+func get_health_ratio() -> float:
+	return health / MAX_HEALTH
+
+
+func is_submerged() -> bool:
+	return is_in_water and _water_is_deep and global_position.y < _water_surface_y - 0.3
+
+
+func get_water_surface_y() -> float:
+	return _water_surface_y
 
 
 func apply_freeze(duration: float) -> void:
@@ -251,11 +296,16 @@ func exit_water(source: Node = null) -> void:
 
 
 func receive_drowning_damage() -> void:
+	receive_damage(drowning_damage)
 	var manager := _get_game_manager()
-	if manager != null and manager.has_method("player_hit"):
-		manager.player_hit()
 	if manager != null and manager.has_method("show_message"):
 		manager.show_message("Te estas ahogando. Sal del agua.", 1.4)
+
+
+func _publish_health_ui() -> void:
+	var manager := _get_game_manager()
+	if manager != null and manager.has_method("update_player_health"):
+		manager.update_player_health(health, MAX_HEALTH)
 
 
 func capture_mouse() -> void:

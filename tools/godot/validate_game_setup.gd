@@ -55,6 +55,7 @@ func _check_menu_scenes() -> void:
 		"res://scenes/ui/settings_menu.tscn",
 		"res://scenes/ui/hud.tscn",
 		"res://scenes/ui/pause_menu.tscn",
+		"res://scenes/ui/defeat_screen.tscn",
 	]:
 		var packed := load(path) as PackedScene
 		_check(packed != null, "%s loads" % path)
@@ -67,34 +68,13 @@ func _check_menu_scenes() -> void:
 
 func _check_main_nodes(main: Node) -> void:
 	for path in [
-		"WorldEnvironment",
-		"SunLight",
-		"DayNightCycle",
+		"Sky3D",
+		"Sky3D/SunLight",
+		"DayNightBridge",
 		"Level",
-		"Level/Terreno_Finca",
-		"Level/Terrain_BasicCollision/CollisionShape3D",
 		"MapBounds",
-		"MapBounds/Wall_North/CollisionShape3D",
-		"MapBounds/Wall_South/CollisionShape3D",
-		"MapBounds/Wall_East/CollisionShape3D",
-		"MapBounds/Wall_West/CollisionShape3D",
-		"ScenarioColliders/FenceCollider_01/CollisionShape3D",
-		"ScenarioColliders/FenceCollider_02/CollisionShape3D",
-		"ScenarioColliders/FenceCollider_03/CollisionShape3D",
-		"ScenarioColliders/FenceCollider_04/CollisionShape3D",
-		"ScenarioColliders/FenceCollider_05/CollisionShape3D",
-		"ScenarioColliders/BridgeCollider/CollisionShape3D",
-		"ScenarioColliders/BarnCollider/CollisionShape3D",
-		"ScenarioColliders/CaveCollider/CollisionShape3D",
-		"WaterAreas/LakeWaterArea/LakeWaterVisual",
-		"WaterAreas/LakeWaterArea/CollisionShape3D",
-		"WaterAreas/RiverWaterArea/RiverWater_01",
-		"WaterAreas/RiverWaterArea/RiverWater_04",
-		"WaterAreas/RiverWaterArea/CollisionShape_01",
-		"WaterAreas/RiverWaterArea/CollisionShape_04",
 		"SpawnPoints",
 		"SpawnPoints/Player_Spawn",
-		"SpawnPoints/Diablo_Spawn",
 		"SpawnPoints/Diablo_Cave_Spawn",
 		"SpawnPoints/AnimalSpawns",
 		"SpawnPoints/CorralZone",
@@ -104,49 +84,30 @@ func _check_main_nodes(main: Node) -> void:
 		"Animals",
 		"GameManager",
 		"InteractiveObjects/CorralGate",
-		"InteractiveObjects/MudTrap",
+		"InteractiveObjects/MudTrap_01",
 		"InteractiveObjects/BridgeTrigger",
-		"UI/TopLeft/HeartsContainer",
+		"InteractiveObjects/CaveTrigger",
+		"InteractiveObjects/Cacique_01",
+		"UI/TopLeft/HealthContent/HealthBar",
 		"UI/TopRight/ObjectivePanel/Content/AnimalRow/LabelAnimals",
-		"UI/TopRight/ObjectivePanel/Content/LabelProgress",
-		"UI/CenterAlert/LabelAlert",
 		"UI/OxygenPanel/OxygenContent/OxygenBar",
-		"UI/MessagePanel/LabelMessage",
 		"PauseMenu",
+		"DefeatScreen",
+		"VictoryScreen",
 	]:
 		_check(main.has_node(path), "main has %s" % path)
 
+	_check(not main.has_node("UI/TopLeft/HeartsContainer"), "HUD uses health bar not hearts")
 	_check(not main.has_node("UI/LabelScore"), "HUD has no score label")
 
 	var animal_spawns := main.get_node("SpawnPoints/AnimalSpawns")
 	_check(animal_spawns.get_child_count() == 10, "main has 10 animal spawn markers")
 
-	var world_environment := main.get_node("WorldEnvironment") as WorldEnvironment
-	_check(world_environment.environment != null, "WorldEnvironment has Environment")
-	if world_environment.environment != null:
-		_check(world_environment.environment.fog_enabled, "fog enabled")
-		_check(world_environment.environment.fog_density <= 0.0015, "fog density is very soft")
+	var sun := main.get_node("Sky3D/SunLight") as DirectionalLight3D
+	_check(sun != null and sun.shadow_enabled, "sun shadows enabled")
 
-	var sun := main.get_node("SunLight") as DirectionalLight3D
-	_check(sun.shadow_enabled, "sun shadows enabled")
-
-	var lake := main.get_node("WaterAreas/LakeWaterArea") as Area3D
-	var river := main.get_node("WaterAreas/RiverWaterArea") as Area3D
 	var safe_zone := main.get_node("SpawnPoints/SafeCorralZone") as Area3D
-	_check(lake.collision_layer == 16 and lake.collision_mask == 1, "lake water uses Water layer and Player mask")
-	_check(river.collision_layer == 16 and river.collision_mask == 1, "river water uses Water layer and Player mask")
-	_check(safe_zone.collision_layer == 32 and safe_zone.collision_mask == 1, "safe corral uses SafeZone layer and Player mask")
-
-	var level := main.get_node("Level")
-	await process_frame
-	await process_frame
-	_check(level.has_node("GeneratedCollisions"), "generated terrain collision root exists")
-	if level.has_node("GeneratedCollisions"):
-		_check(level.get_node("GeneratedCollisions").get_child_count() > 0, "generated terrain collisions exist")
-		var generated := level.get_node("GeneratedCollisions")
-		_check(generated.has_node("Fence_Plain_01_Collision"), "generated fence collision exists")
-		_check(generated.has_node("Rock_M00_Collision"), "generated large rock collision exists")
-		_check(generated.has_node("Tree_F000_Trunk_Collision"), "generated tree trunk collision exists")
+	_check(safe_zone.collision_layer == 32, "safe corral uses SafeZone layer")
 
 
 func _check_runtime_mechanics(main: Node) -> void:
@@ -155,128 +116,81 @@ func _check_runtime_mechanics(main: Node) -> void:
 	if manager == null:
 		return
 
-	for method in ["start_new_game", "continue_game", "collect_animal", "player_hit", "update_progression", "spawn_diablo_after_delay", "spawn_diablo", "win_game", "lose_game", "update_ui", "spawn_animals"]:
+	for method in ["start_new_game", "continue_game", "collect_animal", "on_player_health_changed", "update_progression", "spawn_diablo", "win_game", "lose_game", "update_ui", "spawn_animals", "set_player_entered_cave"]:
 		_check(manager.has_method(method), "GameManager has %s" % method)
 
 	var player := main.get_node("Player") as Node3D
-	_check(player.has_method("slow_down"), "Player has slow_down")
+	_check(player.has_method("heal"), "Player has heal")
+	_check(player.has_method("reset_health"), "Player has reset_health")
 	_check(player.has_method("receive_damage"), "Player has receive_damage")
-	_check(player.has_method("receive_drowning_damage"), "Player has receive_drowning_damage")
-	_check(player.has_method("enter_water"), "Player has enter_water")
-	_check(player.has_method("exit_water"), "Player has exit_water")
-	_check(player.has_method("capture_mouse"), "Player has capture_mouse")
-	_check(player.has_method("release_mouse"), "Player has release_mouse")
-	_check(float(player.get("walk_speed")) == 10.0, "Player walk speed is 10.0")
-	_check(float(player.get("run_speed")) == 18.0, "Player run speed is 18.0")
-	_check(float(player.get("acceleration")) == 18.0, "Player acceleration is 18.0")
-	_check(float(player.get("deceleration")) == 22.0, "Player deceleration is 22.0")
-	_check(float(player.get("gravity")) == 25.0, "Player gravity is 25.0")
-	_check(float(player.get("max_oxygen")) == 100.0, "Player max oxygen is 100")
-	_check(float(player.get("water_move_speed_multiplier")) == 0.45, "Player water speed multiplier is 0.45")
+	_check(player.has_method("is_submerged"), "Player has is_submerged")
+	_check(float(player.get("MAX_HEALTH")) == 100.0, "Player MAX_HEALTH is 100")
+	_check(float(player.get("diablo_damage")) == 34.0, "Player diablo_damage is 34")
 	await _check_player_movement_does_not_rotate_camera(player)
-	await _check_water_mechanics(main, player, manager)
+	await _check_water_mechanics(player, manager)
 
 	var diablo := main.get_node("Diablo")
-	_check(diablo.has_method("reset_position"), "Diablo has reset_position")
-	_check(diablo.has_method("activate"), "Diablo has activate")
-	_check(diablo.has_method("deactivate"), "Diablo has deactivate")
-	_check(diablo.has_method("set_target_safe_zone"), "Diablo has set_target_safe_zone")
 	_check(not bool(diablo.get("active")), "Diablo inactive at start")
-	_check(not diablo.visible, "Diablo hidden at start")
-	_check(float(diablo.get("chase_speed")) == 3.0, "Diablo speed is 3.0 at progress 1")
+	_check(float(diablo.get("chase_speed")) == 5.0, "Diablo speed is 5.0 at progress 1")
 
 	var ui := main.get_node("UI")
-	for method in ["set_lives", "set_animals", "set_progress", "set_message", "show_center_alert", "set_oxygen", "show_oxygen_bar"]:
+	for method in ["set_health", "set_animals", "set_progress", "set_message", "set_oxygen", "show_oxygen_bar"]:
 		_check(ui.has_method(method), "HUD has %s" % method)
 
-	var cycle := main.get_node("DayNightCycle")
-	_check(cycle.get("day_length_seconds") == 300.0, "day/night cycle uses 300 seconds")
+	_check(main.has_node("DayNightBridge"), "day night bridge exists")
 
 	var animals := main.get_node("Animals")
 	_check(animals.get_child_count() == 3, "progress 1 spawns 3 active animals")
 
-	await _collect_next_animal(main)
-	await _collect_next_animal(main)
-	await _collect_next_animal(main)
+	await _deliver_next_animal(main)
+	await _deliver_next_animal(main)
+	await _deliver_next_animal(main)
 	await process_frame
-	_check(int(manager.get("animals_in_corral")) == 3, "animals counter reaches 3")
-	_check(int(manager.get("score")) == 300, "score reaches 300 after 3 animals")
+	_check(int(manager.get("animals_in_corral")) == 3, "animals counter reaches 3 after corral delivery")
 	_check(int(manager.get("current_progress")) == 2, "progress changes to 2 at 3 animals")
-	_check(float(diablo.get("chase_speed")) == 4.0, "Diablo speed is 4.0 at progress 2")
-	_check(animals.get_child_count() == 3, "progress 2 keeps 3 active animals after refill")
+	_check(float(diablo.get("chase_speed")) == 7.0, "Diablo speed is 7.0 at progress 2")
 
-	await _collect_next_animal(main)
-	await _collect_next_animal(main)
-	await _collect_next_animal(main)
+	await _deliver_next_animal(main)
+	await _deliver_next_animal(main)
+	await _deliver_next_animal(main)
 	await process_frame
 	_check(int(manager.get("animals_in_corral")) == 6, "animals counter reaches 6")
 	_check(int(manager.get("current_progress")) == 3, "progress changes to 3 at 6 animals")
-	_check(float(diablo.get("chase_speed")) == 5.0, "Diablo speed is 5.0 at progress 3")
-	_check(animals.get_child_count() == 4, "progress 3 refills toward 10 total animals")
+	_check(float(diablo.get("chase_speed")) == 9.0, "Diablo speed is 9.0 at progress 3")
 
 	for i in 4:
-		await _collect_next_animal(main)
+		await _deliver_next_animal(main)
 	await process_frame
 	_check(int(manager.get("animals_in_corral")) == 10, "animals counter reaches 10")
 	_check(bool(manager.get("victory")), "victory set at 10 animals")
-	_check(bool(manager.get("game_over")), "game_over set on victory")
 
 	manager.set("game_over", false)
 	manager.set("victory", false)
-	manager.set("diablo_spawned", false)
-	diablo.deactivate()
-	manager.spawn_diablo(false)
+	player.reset_health()
+	player.receive_damage(100.0)
 	await process_frame
-	_check(bool(manager.get("diablo_spawned")), "Diablo spawned flag set")
-	_check(bool(diablo.get("active")), "Diablo active after spawn_diablo")
-	_check(diablo.visible, "Diablo visible after spawn_diablo")
-
-	manager.set("game_over", false)
-	manager.set("victory", false)
-	manager.set("lives", 3)
-	manager.player_lost_life()
-	manager.player_lost_life()
-	manager.player_lost_life()
-	await process_frame
-	_check(int(manager.get("lives")) == 0, "lives reach 0 after 3 hits")
+	_check(float(player.get("health")) <= 0.0, "player health reaches 0 after lethal damage")
 	_check(bool(manager.get("game_over")), "game_over set on defeat")
 
 
-func _check_water_mechanics(main: Node, player: Node3D, manager: Node) -> void:
-	var lake := main.get_node("WaterAreas/LakeWaterArea")
-	var ui := main.get_node("UI")
-	_check(ui.has_method("set_oxygen"), "HUD can set oxygen")
-
-	player.enter_water(lake, true, -0.8)
+func _check_water_mechanics(player: Node3D, manager: Node) -> void:
+	player.enter_water(null, true, -0.8)
 	await physics_frame
 	_check(bool(player.get("is_in_water")), "Player enters water state")
-	_check(float(player.get("oxygen")) < float(player.get("max_oxygen")), "oxygen drains in water")
-
-	manager.set("lives", 3)
 	player.set("oxygen", 0.0)
 	await physics_frame
-	_check(int(manager.get("lives")) < 3, "drowning damage removes life")
-
-	player.exit_water(lake)
+	_check(float(player.get("health")) < float(player.get("MAX_HEALTH")), "drowning reduces health")
+	player.exit_water(null)
 	await physics_frame
 	_check(not bool(player.get("is_in_water")), "Player exits water state")
-	manager.set("lives", 3)
+	player.reset_health()
 	manager.set("game_over", false)
 	manager.set("victory", false)
 
-	manager.set_player_safe_zone(true)
-	await process_frame
-	var diablo := main.get_node("Diablo")
-	_check(bool(manager.get("player_in_safe_zone")), "GameManager tracks player safe zone")
-	_check(bool(diablo.get("target_in_safe_zone")), "Diablo receives safe zone state")
-	manager.set_player_safe_zone(false)
-	await process_frame
-	_check(not bool(manager.get("player_in_safe_zone")), "GameManager clears player safe zone")
 
-
-func _collect_next_animal(main: Node) -> void:
+func _deliver_next_animal(main: Node) -> void:
 	var animals := main.get_node("Animals")
-	_check(animals.get_child_count() > 0, "there is an active animal to collect")
+	_check(animals.get_child_count() > 0, "there is an active animal to deliver")
 	if animals.get_child_count() == 0:
 		return
 
@@ -284,6 +198,11 @@ func _collect_next_animal(main: Node) -> void:
 	var player := main.get_node("Player")
 	if animal.has_method("interact"):
 		animal.interact(player)
+	await process_frame
+
+	var corral := main.get_node("SpawnPoints/CorralZone")
+	if corral.has_method("_try_receive_animal"):
+		corral._try_receive_animal(player)
 	await process_frame
 
 

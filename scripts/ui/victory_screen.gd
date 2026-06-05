@@ -11,12 +11,13 @@ signal quit_requested
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	hide()
 	_btn_restart.pressed.connect(_on_restart)
 	_btn_quit.pressed.connect(_on_quit)
 
 
-func show_victory(animals: int, _score: int) -> void:
+func show_victory(animals: int) -> void:
 	_label_title.text = "¡Victoria!"
 	_label_sub.text = "%d animales reunidos en el corral.\n¡Completaste el nivel!" % animals
 	show()

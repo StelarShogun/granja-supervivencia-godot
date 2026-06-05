@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactives/cave_trigger.gd" id="1_cave"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cave"]
+size = Vector3(8, 5, 6)
+
+[node name="CaveTrigger" type="Area3D" groups=["interactives"]]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("1_cave")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+shape = SubResource("BoxShape3D_cave")
