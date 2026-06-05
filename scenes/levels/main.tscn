@@ -151,17 +151,14 @@ size = Vector3(0.55, 5.5, 18.9)
 [sub_resource type="BoxShape3D" id="BoxShape3D_bridge_collider"]
 size = Vector3(24.5, 5.4, 26.8)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_barn_collider"]
-size = Vector3(12.8, 8, 9.8)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_cave_collider"]
 size = Vector3(30, 14, 12)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_gvp5n"]
-size = Vector3(94, 8, 62)
+size = Vector3(120, 8, 88)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_oix75"]
-size = Vector3(62, 9, 40)
+size = Vector3(90, 10, 68)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_masl8"]
 size = Vector3(31, 8, 5.6)
@@ -208,7 +205,7 @@ _surfaces = [{
 }]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_y2451"]
-size = Vector3(62, 9, 40)
+size = Vector3(90, 10, 68)
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_w31o2"]
 _surfaces = [{
@@ -224,7 +221,7 @@ _surfaces = [{
 }]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_8w8he"]
-size = Vector3(116, 6, 78)
+size = Vector3(170, 8, 136)
 
 [sub_resource type="BoxMesh" id="BoxMesh_corral"]
 size = Vector3(5, 0.08, 5)
@@ -427,14 +424,6 @@ collision_mask = 5
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ScenarioColliders/BridgeCollider" unique_id=2053888897]
 shape = SubResource("BoxShape3D_bridge_collider")
 
-[node name="BarnCollider" type="StaticBody3D" parent="ScenarioColliders" unique_id=160494100]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 144.653, 7.935, -134.866)
-collision_layer = 2
-collision_mask = 5
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ScenarioColliders/BarnCollider" unique_id=1235194194]
-shape = SubResource("BoxShape3D_barn_collider")
-
 [node name="CaveCollider" type="StaticBody3D" parent="ScenarioColliders" unique_id=1685864508]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 165.653, 90, 181)
 collision_layer = 2
@@ -460,7 +449,7 @@ enter_message = "Agua somera: caminas mas lento."
 shape = SubResource("BoxShape3D_gvp5n")
 
 [node name="LakeDeepZone" type="Area3D" parent="WaterSystem/WaterAreas" unique_id=1875709202 groups=["water"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -150.347, -7.7, -144.866)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -150.347, -8.2, -144.866)
 collision_layer = 16
 script = ExtResource("14_water_area")
 water_surface_y = -3.2
@@ -531,9 +520,9 @@ mesh = SubResource("ArrayMesh_sy51j")
 [node name="LakeSystem" type="Node3D" parent="WaterSystem" unique_id=1823748391]
 script = ExtResource("16_x5gqu")
 lake_material = ExtResource("17_8qayg")
-radius_x = 52.0
-radius_z = 36.0
-wobble = 0.07
+radius_x = 60.0
+radius_z = 44.0
+wobble = 0.12
 
 [node name="LakeDeepArea" type="Area3D" parent="WaterSystem/LakeSystem" unique_id=693361286]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -150.347, -3.2, -144.866)

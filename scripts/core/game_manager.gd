@@ -273,8 +273,21 @@ func spawn_diablo_after_delay(request_id: int = 0) -> void:
 	var wait_time := maxf(0.0, diablo_spawn_delay - elapsed_time)
 	if wait_time > 0.0:
 		await get_tree().create_timer(wait_time).timeout
+	# Normal mode: wait until night so Diablo is immediately visible when he spawns
+	if SaveManager.game_mode == 0:
+		while not _is_night():
+			if local_request != _spawn_request_id or not game_started or game_over:
+				return
+			await get_tree().create_timer(2.0).timeout
 	if local_request == _spawn_request_id and game_started and not game_over and not diablo_spawned:
 		spawn_diablo()
+
+
+func _is_night() -> bool:
+	var dnc := get_tree().get_first_node_in_group("day_night_cycle")
+	if dnc == null:
+		return true
+	return sin(float(dnc.get("time_of_day")) * TAU) <= 0.0
 
 
 func spawn_diablo(show_alert: bool = true) -> void:
@@ -335,7 +348,12 @@ func update_ui() -> void:
 		ui.set_lives(lives)
 		ui.set_animals(animals_in_corral, ANIMAL_GOAL)
 		ui.set_progress(current_progress)
-		ui.set_message(_current_message)
+		if _message_time_left > 0.0:
+			ui.set_message(_current_message)
+		elif ui.has_method("show_objective"):
+			ui.show_objective(_current_message)
+		else:
+			ui.set_message(_current_message)
 	elif ui != null and ui.has_method("update_status"):
 		ui.update_status(lives, score, animals_in_corral, ANIMAL_GOAL, current_progress, 3, _current_message)
 
@@ -381,7 +399,7 @@ func _objective_message() -> String:
 	if game_over:
 		return "Derrota: El Diablo te alcanzo tres veces."
 
-	var carry_hint := " (1 a la vez, de noche)" if SaveManager.game_mode == 1 else ""
+	var carry_hint := " (1 animal a la vez)" if SaveManager.game_mode == 1 else ""
 	match current_progress:
 		1:
 			return "Recolecta animales y llévalos al corral." + carry_hint

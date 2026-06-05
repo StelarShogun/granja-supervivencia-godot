@@ -4,6 +4,8 @@ extends CanvasLayer
 @export var heart_empty: Texture2D = preload("res://assets/ui/heart_empty.svg")
 
 var _alert_token: int = 0
+var _objective_pinned: bool = false
+var _has_temp_message: bool = false
 
 @onready var _hearts_container: HBoxContainer = $TopLeft/HeartsContainer
 @onready var _label_animals: Label = $TopRight/ObjectivePanel/Content/AnimalRow/LabelAnimals
@@ -13,16 +15,25 @@ var _alert_token: int = 0
 @onready var _label_alert: Label = $CenterAlert/LabelAlert
 @onready var _oxygen_panel: PanelContainer = $OxygenPanel
 @onready var _oxygen_bar: ProgressBar = $OxygenPanel/OxygenContent/OxygenBar
+@onready var _message_panel: PanelContainer = $MessagePanel
 
 
 func _ready() -> void:
 	_center_alert.hide()
 	_oxygen_panel.hide()
+	_message_panel.hide()
 	set_lives(3)
 	set_animals(0, 10)
 	set_progress(1)
-	set_message("Lleva animales al corral")
 	set_oxygen(100.0, 100.0)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.keycode == KEY_F and event.pressed and not event.echo:
+		_objective_pinned = not _objective_pinned
+		if not _has_temp_message:
+			_message_panel.visible = _objective_pinned
+		get_viewport().set_input_as_handled()
 
 
 func set_lives(value: int) -> void:
@@ -40,8 +51,18 @@ func set_progress(value: int) -> void:
 	_label_progress.text = "Progresión %d / 3" % value
 
 
+# Force-shows the panel (for temporary game-event messages)
 func set_message(text: String) -> void:
 	_label_message.text = text
+	_has_temp_message = true
+	_message_panel.show()
+
+
+# Updates text without forcing panel open (respects F-key state)
+func show_objective(text: String) -> void:
+	_label_message.text = text
+	_has_temp_message = false
+	_message_panel.visible = _objective_pinned
 
 
 func set_oxygen(value: float, max_value: float) -> void:
