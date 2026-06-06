@@ -22,8 +22,7 @@ The project must satisfy these evaluation areas:
 
 2. Gameplay mechanics:
    - clear objective;
-   - lives;
-   - score;
+   - health (100 HP bar);
    - win/lose conditions;
    - functional controls;
    - up to 3 levels of progression.
@@ -70,15 +69,14 @@ Do not modify main.tscn at the same time as another teammate unless coordinated.
 - WASD movement.
 - Shift run.
 - E interact.
-- Animal collection.
-- Score.
-- 3 lives.
+- Animal collection via corral delivery (both modes).
+- 100 HP health bar; Cacique collectible heals.
 - Diablo enemy chase.
 - Level 1: rural zone.
-- Level 2: lake/planicie.
+- Level 2: open plain (former lake basin; now dry plain with river crossing).
 - Level 3: forest/cave.
-- Win after level 3.
-- Lose when lives reach 0.
+- Win after 10 animals in corral.
+- Lose when HP reaches 0.
 
 ## Required interactives
 
@@ -95,17 +93,39 @@ The farm map must not have:
 - flat empty expanded zones;
 - props concentrated in one area;
 - unrealistic cave;
-- overly advanced lake material;
+- overly advanced water material;
 - hard terrain transitions;
 - DefaultMaterial on visible objects.
 
 The map must have:
 
 - primary forest;
-- planicie;
-- lake;
+- open plain (former lake basin, now dry);
+- river crossing with bridge (no lake);
 - rural zone;
 - cave zone;
 - natural paths;
 - distributed props;
 - coherent low poly materials.
+
+## Learned User Preferences
+
+- Responder siempre en español.
+- Usar estilo /caveman (corto, directo, técnico) en conversación según CLAUDE.md.
+- Integración visual del agua (boujie_water_shader) la gestiona Claude Code; no duplicar ese trabajo aquí.
+- Verificar con Godot AI MCP (editor conectado) cuando esté disponible; no usar headless por defecto.
+
+## Learned Workspace Facts
+
+- Jugador usa barra de 100 HP (no 3 vidas); Cacique cura; derrota a 0 HP.
+- Sin puntuación en HUD, guardado ni pantalla de victoria.
+- Animales solo cuentan al entregarlos en el corral (Normal y modo difícil).
+- Progresión niveles 1/2/3 por animales en corral (umbrales 3 y 6; meta 10).
+- Modo difícil = `game_mode` 1 (UI renombrado; antes "Modo Kojima").
+- Terreno activo: `Terreno_Finca.glb` desde `Terreno_Finca.blend`; Terrain3D abandonado; agua opaca no en GLB export.
+- `vendor/archives/` guarda repos de terceros con `.gdignore`; plugins activos permanecen en `addons/`.
+- `main.tscn`: Terreno_Finca, TerrainCollision (`terrain_collision.gd`), WaterGameplay, WaterVisual; sin Terrain3D/PropsSpawner/StructuresVisual.
+- Spawn/alineación: `Terreno_Finca` identidad; Player_Spawn=`Sp_Player` GLB; tools/godot/check_spawn_ground.gd, audit_level_alignment.gd, sync_spawns_from_glb.gd.
+- GLB pendiente: `Corral_01`, `Bridge_01`, `Barn_01` en origen; `Granero` ausente (sí Granero_Floor/Roof).
+- Nadar y bucear implementados en el jugador.
+- Cave trigger con aviso si Diablo no salió y flag `player_entered_cave` en guardado.

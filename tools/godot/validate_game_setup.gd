@@ -124,6 +124,8 @@ func _check_runtime_mechanics(main: Node) -> void:
 	_check(player.has_method("reset_health"), "Player has reset_health")
 	_check(player.has_method("receive_damage"), "Player has receive_damage")
 	_check(player.has_method("is_submerged"), "Player has is_submerged")
+	_check(player.has_method("is_swimming"), "Player has is_swimming")
+	_check(player.has_method("is_diving"), "Player has is_diving")
 	_check(float(player.get("MAX_HEALTH")) == 100.0, "Player MAX_HEALTH is 100")
 	_check(float(player.get("diablo_damage")) == 34.0, "Player diablo_damage is 34")
 	await _check_player_movement_does_not_rotate_camera(player)
@@ -174,15 +176,21 @@ func _check_runtime_mechanics(main: Node) -> void:
 
 
 func _check_water_mechanics(player: Node3D, manager: Node) -> void:
-	player.enter_water(null, true, -0.8)
+	player.enter_water(null, true, 2.0)
+	player.global_position.y = 0.5
+	player.set("swim_state", player.SwimState.UNDERWATER)
 	await physics_frame
 	_check(bool(player.get("is_in_water")), "Player enters water state")
+	_check(player.call("is_swimming"), "Player is swimming")
+	_check(player.call("is_diving"), "Player can dive underwater")
+	_check(player.call("is_submerged"), "Player is submerged while diving")
 	player.set("oxygen", 0.0)
 	await physics_frame
 	_check(float(player.get("health")) < float(player.get("MAX_HEALTH")), "drowning reduces health")
 	player.exit_water(null)
 	await physics_frame
 	_check(not bool(player.get("is_in_water")), "Player exits water state")
+	_check(not player.call("is_diving"), "Player stops diving on exit")
 	player.reset_health()
 	manager.set("game_over", false)
 	manager.set("victory", false)

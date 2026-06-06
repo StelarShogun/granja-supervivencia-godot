@@ -2,6 +2,8 @@ extends CharacterBody3D
 
 const MAX_HEALTH := 100.0
 
+enum SwimState { NONE, SURFACE, UNDERWATER }
+
 @export var walk_speed: float = 10.0
 @export var run_speed: float = 18.0
 @export var acceleration: float = 18.0
@@ -17,10 +19,17 @@ const MAX_HEALTH := 100.0
 @export var max_oxygen: float = 100.0
 @export var oxygen_drain_rate: float = 12.0
 @export var oxygen_recover_rate: float = 25.0
+@export var oxygen_surface_recover_rate: float = 35.0
 @export var drowning_damage_interval: float = 1.0
-@export var water_move_speed_multiplier: float = 0.45
+@export var swim_speed: float = 7.0
+@export var swim_sprint_speed: float = 10.0
+@export var dive_swim_speed: float = 5.0
+@export var swim_vertical_speed: float = 6.0
+@export var swim_surface_body_offset: float = 1.05
+@export var submerged_depth: float = 0.4
 @export var water_gravity: float = 4.0
 @export var water_sink_speed: float = 1.2
+@export var shallow_wade_depth: float = 0.55
 @export var jump_velocity: float = 8.0
 @export var stand_height: float = 1.8
 @export var crouch_height: float = 1.0
@@ -35,6 +44,7 @@ var invulnerable: bool = false
 var speed_multiplier: float = 1.0
 var camera_enabled: bool = true
 var is_in_water: bool = false
+var swim_state: SwimState = SwimState.NONE
 var oxygen: float = 100.0
 var health: float = MAX_HEALTH
 
@@ -100,7 +110,10 @@ func _physics_process(delta: float) -> void:
 	if manager != null and bool(manager.get("game_over")):
 		velocity.x = 0.0
 		velocity.z = 0.0
-		_apply_gravity(delta)
+		if is_in_water:
+			_apply_swim_vertical(delta)
+		else:
+			_apply_land_gravity(delta)
 		move_and_slide()
 		return
 
@@ -108,46 +121,18 @@ func _physics_process(delta: float) -> void:
 	if _frozen_left > 0.0:
 		velocity.x = 0.0
 		velocity.z = 0.0
-		_apply_gravity(delta)
+		if is_in_water:
+			_apply_swim_vertical(delta)
+		else:
+			_apply_land_gravity(delta)
 		move_and_slide()
 		return
 
-	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
-
-	var forward := -_camera_pivot.global_transform.basis.z
-	forward.y = 0.0
-	forward = forward.normalized()
-	var right := _camera_pivot.global_transform.basis.x
-	right.y = 0.0
-	right = right.normalized()
-
-	var direction := right * input_dir.x + forward * -input_dir.y
-	if direction.length_squared() > 1.0:
-		direction = direction.normalized()
-
-	var target_speed := walk_speed
-	if Input.is_action_pressed("run") and not is_crouching and not is_in_water:
-		target_speed = run_speed
-	target_speed *= speed_multiplier
-	if is_crouching:
-		target_speed *= crouch_speed_multiplier
+	var swim_direction := _get_move_direction()
 	if is_in_water:
-		target_speed *= water_move_speed_multiplier
-
-	var horizontal_velocity := Vector3(velocity.x, 0.0, velocity.z)
-	if direction.length_squared() > 0.001:
-		horizontal_velocity = horizontal_velocity.move_toward(direction * target_speed, acceleration * delta)
-		var target_yaw := atan2(direction.x, direction.z)
-		_visual_mesh.rotation.y = lerp_angle(_visual_mesh.rotation.y, target_yaw, rotation_speed * delta)
+		_apply_swim_movement(delta, swim_direction)
 	else:
-		horizontal_velocity = horizontal_velocity.move_toward(Vector3.ZERO, deceleration * delta)
-
-	velocity.x = horizontal_velocity.x
-	velocity.z = horizontal_velocity.z
-
-	_apply_gravity(delta)
-	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_in_water and not is_crouching:
-		velocity.y = jump_velocity
+		_apply_land_movement(delta, swim_direction)
 	move_and_slide()
 
 
@@ -230,8 +215,20 @@ func get_health_ratio() -> float:
 	return health / MAX_HEALTH
 
 
+func is_swimming() -> bool:
+	return is_in_water
+
+
+func is_diving() -> bool:
+	return swim_state == SwimState.UNDERWATER
+
+
 func is_submerged() -> bool:
-	return is_in_water and _water_is_deep and global_position.y < _water_surface_y - 0.3
+	if not is_in_water or not _water_is_deep:
+		return false
+	if swim_state == SwimState.UNDERWATER:
+		return true
+	return global_position.y < _water_surface_y - submerged_depth
 
 
 func get_water_surface_y() -> float:
@@ -339,18 +336,147 @@ func _rotate_camera(relative_motion: Vector2) -> void:
 	_spring_arm.rotation_degrees.x = _camera_pitch
 
 
-func _apply_gravity(delta: float) -> void:
-	if is_in_water:
-		var target_y := -water_sink_speed if _water_is_deep else -0.15
-		if global_position.y > _water_surface_y + 0.2:
-			target_y = minf(target_y, -0.4)
-		velocity.y = move_toward(velocity.y, target_y, water_gravity * delta)
+func _get_move_direction() -> Vector3:
+	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
+	var basis := _camera_pivot.global_transform.basis
+	if is_diving():
+		var forward := -basis.z
+		var right := basis.x
+		var direction := right * input_dir.x + forward * -input_dir.y
+		if direction.length_squared() > 1.0:
+			direction = direction.normalized()
+		return direction
+
+	var forward_flat := -basis.z
+	forward_flat.y = 0.0
+	forward_flat = forward_flat.normalized()
+	var right_flat := basis.x
+	right_flat.y = 0.0
+	right_flat = right_flat.normalized()
+	var direction_flat := right_flat * input_dir.x + forward_flat * -input_dir.y
+	if direction_flat.length_squared() > 1.0:
+		direction_flat = direction_flat.normalized()
+	return direction_flat
+
+
+func _apply_land_movement(delta: float, direction: Vector3) -> void:
+	var target_speed := walk_speed
+	if Input.is_action_pressed("run") and not is_crouching:
+		target_speed = run_speed
+	target_speed *= speed_multiplier
+	if is_crouching:
+		target_speed *= crouch_speed_multiplier
+
+	_apply_horizontal_movement(delta, direction, target_speed)
+	_apply_land_gravity(delta)
+	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
+		velocity.y = jump_velocity
+
+
+func _apply_swim_movement(delta: float, direction: Vector3) -> void:
+	_update_swim_state()
+
+	var target_speed := swim_speed
+	if swim_state == SwimState.UNDERWATER:
+		target_speed = dive_swim_speed
+	elif Input.is_action_pressed("run"):
+		target_speed = swim_sprint_speed
+	target_speed *= speed_multiplier
+
+	_apply_horizontal_movement(delta, direction, target_speed, true)
+	_apply_swim_vertical(delta)
+
+
+func _apply_horizontal_movement(
+	delta: float,
+	direction: Vector3,
+	target_speed: float,
+	use_full_3d: bool = false
+) -> void:
+	if use_full_3d and is_diving():
+		if direction.length_squared() > 0.001:
+			velocity = velocity.move_toward(direction * target_speed, acceleration * delta * 0.75)
+			var flat := Vector3(direction.x, 0.0, direction.z)
+			if flat.length_squared() > 0.001:
+				var target_yaw := atan2(flat.x, flat.z)
+				_visual_mesh.rotation.y = lerp_angle(_visual_mesh.rotation.y, target_yaw, rotation_speed * delta)
+		else:
+			velocity = velocity.move_toward(Vector3.ZERO, deceleration * delta)
 		return
 
+	var horizontal_velocity := Vector3(velocity.x, 0.0, velocity.z)
+	if direction.length_squared() > 0.001:
+		horizontal_velocity = horizontal_velocity.move_toward(direction * target_speed, acceleration * delta)
+		var target_yaw := atan2(direction.x, direction.z)
+		_visual_mesh.rotation.y = lerp_angle(_visual_mesh.rotation.y, target_yaw, rotation_speed * delta)
+	else:
+		horizontal_velocity = horizontal_velocity.move_toward(Vector3.ZERO, deceleration * delta)
+
+	velocity.x = horizontal_velocity.x
+	velocity.z = horizontal_velocity.z
+
+
+func _apply_land_gravity(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 	else:
 		velocity.y = maxf(velocity.y, -0.2)
+
+
+func _update_swim_state() -> void:
+	if not is_in_water:
+		swim_state = SwimState.NONE
+		return
+
+	if not _water_is_deep:
+		swim_state = SwimState.SURFACE
+		return
+
+	var depth_below_surface := _water_surface_y - global_position.y
+	var want_dive := Input.is_action_pressed("crouch")
+	var want_rise := Input.is_action_pressed("jump")
+
+	match swim_state:
+		SwimState.NONE, SwimState.SURFACE:
+			if want_dive:
+				swim_state = SwimState.UNDERWATER
+			else:
+				swim_state = SwimState.SURFACE
+		SwimState.UNDERWATER:
+			if want_rise and not want_dive:
+				swim_state = SwimState.SURFACE
+			elif depth_below_surface < submerged_depth * 0.35 and not want_dive:
+				swim_state = SwimState.SURFACE
+
+
+func _apply_swim_vertical(delta: float) -> void:
+	if not _water_is_deep:
+		var wade_y := _water_surface_y - shallow_wade_depth
+		velocity.y = move_toward(
+			velocity.y,
+			(wade_y - global_position.y) * 4.0,
+			water_gravity * delta
+		)
+		return
+
+	if swim_state == SwimState.UNDERWATER:
+		var target_vy := -water_sink_speed * 0.25
+		if Input.is_action_pressed("jump"):
+			target_vy = swim_vertical_speed
+		elif Input.is_action_pressed("crouch"):
+			target_vy = -swim_vertical_speed
+		velocity.y = move_toward(velocity.y, target_vy, water_gravity * delta)
+		return
+
+	var float_y := _water_surface_y - swim_surface_body_offset
+	if Input.is_action_pressed("jump"):
+		velocity.y = move_toward(velocity.y, swim_vertical_speed * 0.35, water_gravity * delta)
+	else:
+		velocity.y = move_toward(
+			velocity.y,
+			(float_y - global_position.y) * 5.0,
+			water_gravity * delta
+		)
 
 
 func _update_timers(delta: float) -> void:
@@ -369,13 +495,17 @@ func _update_timers(delta: float) -> void:
 
 
 func _update_water_state(delta: float) -> void:
-	if is_in_water and _water_is_deep:
+	if is_submerged():
 		oxygen = maxf(0.0, oxygen - oxygen_drain_rate * delta)
 		if oxygen <= 0.0:
 			_drowning_damage_left -= delta
 			if _drowning_damage_left <= 0.0:
 				_drowning_damage_left = drowning_damage_interval
 				receive_drowning_damage()
+	elif is_in_water:
+		var recover_rate := oxygen_surface_recover_rate if _water_is_deep else oxygen_recover_rate
+		oxygen = minf(max_oxygen, oxygen + recover_rate * delta)
+		_drowning_damage_left = 0.0
 	else:
 		oxygen = minf(max_oxygen, oxygen + oxygen_recover_rate * delta)
 		_drowning_damage_left = 0.0
@@ -384,6 +514,7 @@ func _update_water_state(delta: float) -> void:
 
 
 func _refresh_water_flags() -> void:
+	var was_in_water := is_in_water
 	is_in_water = not _water_sources.is_empty()
 	_water_is_deep = false
 	_water_surface_y = global_position.y
@@ -393,11 +524,17 @@ func _refresh_water_flags() -> void:
 		_water_is_deep = _water_is_deep or bool(data.get("deep", false))
 		_water_surface_y = maxf(_water_surface_y, float(data.get("surface_y", _water_surface_y)))
 
+	if is_in_water and not was_in_water:
+		swim_state = SwimState.SURFACE if _water_is_deep else SwimState.SURFACE
+	elif not is_in_water:
+		swim_state = SwimState.NONE
+
 
 func _publish_oxygen_ui() -> void:
 	var manager := _get_game_manager()
 	if manager != null and manager.has_method("update_player_oxygen"):
-		manager.update_player_oxygen(oxygen, max_oxygen, _water_is_deep or oxygen < max_oxygen)
+		var show_oxygen := _water_is_deep and is_in_water
+		manager.update_player_oxygen(oxygen, max_oxygen, show_oxygen or oxygen < max_oxygen)
 
 
 func _try_interact() -> void:

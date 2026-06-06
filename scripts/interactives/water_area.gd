@@ -4,7 +4,7 @@ extends Area3D
 @export var water_surface_y: float = 0.0
 @export var use_body_y_as_surface: bool = false
 @export var game_manager_path: NodePath = NodePath("../../GameManager")
-@export var enter_message: String = "Entraste al agua. Vigila el oxigeno."
+@export var enter_message: String = "Entraste al agua. Shift=nadar rapido. Ctrl=bucear. Espacio=subir."
 @export var exit_message: String = "Saliste del agua."
 
 

@@ -1,23 +1,27 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://d0pyvo8rbj0fm"]
 
-[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu_script"]
+[ext_resource type="Script" uid="uid://dc8fclrkovxuf" path="res://scripts/ui/main_menu.gd" id="1_menu_script"]
 [ext_resource type="StyleBox" path="res://assets/ui/panel_bg.tres" id="2_panel_bg"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1867059266]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_menu_script")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=1252511997]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0.06, 0.11, 0.08, 1)
 
-[node name="Panel" type="PanelContainer" parent="."]
+[node name="Panel" type="PanelContainer" parent="." unique_id=1555770340]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -28,14 +32,16 @@ offset_left = -260.0
 offset_top = -278.0
 offset_right = 260.0
 offset_bottom = 278.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/panel = ExtResource("2_panel_bg")
 
-[node name="MenuButtons" type="VBoxContainer" parent="Panel"]
+[node name="MenuButtons" type="VBoxContainer" parent="Panel" unique_id=758366944]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="Title" type="Label" parent="Panel/MenuButtons"]
+[node name="Title" type="Label" parent="Panel/MenuButtons" unique_id=265881177]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9, 0.85, 0.6, 1)
 theme_override_font_sizes/font_size = 36
@@ -43,63 +49,41 @@ text = "Finca: Rescate y Supervivencia"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Subtitle" type="Label" parent="Panel/MenuButtons"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.85, 0.65, 0.8)
-theme_override_font_sizes/font_size = 14
-text = "Recoge animales • Evita al Diablo • 100 HP"
-horizontal_alignment = 1
-
-[node name="Separator1" type="HSeparator" parent="Panel/MenuButtons"]
-layout_mode = 2
+[node name="Separator1" type="HSeparator" parent="Panel/MenuButtons" unique_id=706426470]
 custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
 
-[node name="ContinueButton" type="Button" parent="Panel/MenuButtons"]
+[node name="ContinueButton" type="Button" parent="Panel/MenuButtons" unique_id=1694328463]
 custom_minimum_size = Vector2(380, 44)
 layout_mode = 2
 text = "Continuar partida"
 
-[node name="NewGameButton" type="Button" parent="Panel/MenuButtons"]
+[node name="NewGameButton" type="Button" parent="Panel/MenuButtons" unique_id=1656305194]
 custom_minimum_size = Vector2(380, 44)
 layout_mode = 2
 text = "Nueva partida  —  Modo Normal"
 
-[node name="ModeNormalDesc" type="Label" parent="Panel/MenuButtons"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.9, 0.75, 0.65)
-theme_override_font_sizes/font_size = 12
-text = "El Diablo sale de noche. Lleva todos los animales al corral."
-horizontal_alignment = 1
-
-[node name="KojimaButton" type="Button" parent="Panel/MenuButtons"]
+[node name="KojimaButton" type="Button" parent="Panel/MenuButtons" unique_id=794137117]
 custom_minimum_size = Vector2(380, 44)
 layout_mode = 2
 text = "Modo difícil  —  Dificultad extrema"
 
-[node name="ModeKojimaDesc" type="Label" parent="Panel/MenuButtons"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1.0, 0.6, 0.4, 0.65)
-theme_override_font_sizes/font_size = 12
-text = "1 animal a la vez. Diablo siempre activo. Más veloz y agresivo."
-horizontal_alignment = 1
-
-[node name="Separator2" type="HSeparator" parent="Panel/MenuButtons"]
-layout_mode = 2
+[node name="Separator2" type="HSeparator" parent="Panel/MenuButtons" unique_id=1682372307]
 custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
 
-[node name="SettingsButton" type="Button" parent="Panel/MenuButtons"]
+[node name="SettingsButton" type="Button" parent="Panel/MenuButtons" unique_id=19244225]
 custom_minimum_size = Vector2(380, 40)
 layout_mode = 2
 text = "Ajustes"
 
-[node name="QuitButton" type="Button" parent="Panel/MenuButtons"]
+[node name="QuitButton" type="Button" parent="Panel/MenuButtons" unique_id=12228331]
 custom_minimum_size = Vector2(380, 40)
 layout_mode = 2
 text = "Salir"
 
-[node name="MessageLabel" type="Label" parent="Panel"]
+[node name="MessageLabel" type="Label" parent="Panel" unique_id=709971589]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.5, 0.4, 1)
 theme_override_font_sizes/font_size = 15
-text = ""
 horizontal_alignment = 1
