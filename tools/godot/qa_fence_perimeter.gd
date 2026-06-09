@@ -32,8 +32,10 @@ func _run() -> void:
 
 	# exclude fence/gate bodies from ground rays (we need raw terrain height)
 	_exclude.clear()
-	for body in [main.find_child("FenceCollision", true, false),
-			main.find_child("GateBody", true, false)]:
+	var bodies: Array[Node] = [main.find_child("FenceCollision", true, false)]
+	bodies.append_array(main.find_children("GateBody", "", true, false))
+	bodies.append_array(main.find_children("GateFrame", "", true, false))
+	for body in bodies:
 		if body is CollisionObject3D:
 			_exclude.append(body.get_rid())
 

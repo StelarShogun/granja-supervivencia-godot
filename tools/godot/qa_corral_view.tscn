@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/main.tscn" id="1_main"]
+[ext_resource type="Script" path="res://tools/godot/qa_view_cam.gd" id="2_cam"]
+
+[node name="QACorralView" type="Node3D"]
+
+[node name="Main" parent="." instance=ExtResource("1_main")]
+
+[node name="QACam" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 121, 42, -132)
+fov = 60.0
+script = ExtResource("2_cam")

@@ -15,7 +15,11 @@ extends Node3D
 @export_enum("North(-Z)", "South(+Z)", "West(-X)", "East(+X)") var gate_side := 2
 @export var gate_center := -124.866  ## along the gate edge (X for N/S, Z for W/E)
 @export var gate_width := 8.0
-@export var fence_scale := 1.4       ## visual height/depth scale
+@export var fence_scale := 1.4       ## visual height scale
+## Depth (rail thickness) multiplier. The raw fence_unit rails are ~8 cm thick
+## and alias away at distance, reading as "gaps between modules"; thicker rails
+## keep the fence visually continuous from gameplay camera range.
+@export var depth_scale := 2.4
 @export var embed := 0.12            ## sink base into ground to avoid light gaps
 @export var collision_depth := 0.3
 
@@ -157,17 +161,29 @@ func _chain_segment(a: Vector2, b: Vector2, out: Array[Transform3D]) -> void:
 		var p := a + dir * (length * float(i) / float(count))
 		pts.append(Vector3(p.x, _ground_robust(p, dir), p.y))
 
-	# one subdivision pass: insert a midpoint where the ground bulges above
-	# the straight tile line (convex terrain would bury the rail mid-tile)
+	# one subdivision pass: where the ground bulges above the straight tile
+	# line (convex terrain would bury the rail mid-tile), insert the worst
+	# bulge point sampled at 1/4, 1/2 and 3/4 of the tile
 	var refined: Array[Vector3] = []
 	for i in count:
 		var p := pts[i]
 		var q := pts[i + 1]
 		refined.append(p)
-		var mid2 := Vector2((p.x + q.x) * 0.5, (p.z + q.z) * 0.5)
-		var gm = _ground(mid2.x, mid2.y)
-		if gm != null and float(gm) - (p.y + q.y) * 0.5 > 0.15:
-			refined.append(Vector3(mid2.x, float(gm), mid2.y))
+		var worst := 0.15
+		var worst_pt := Vector3.ZERO
+		var found := false
+		for f in [0.25, 0.5, 0.75]:
+			var s2 := Vector2(lerpf(p.x, q.x, f), lerpf(p.z, q.z, f))
+			var gs = _ground(s2.x, s2.y)
+			if gs == null:
+				continue
+			var bulge := float(gs) - lerpf(p.y, q.y, f)
+			if bulge > worst:
+				worst = bulge
+				worst_pt = Vector3(s2.x, float(gs), s2.y)
+				found = true
+		if found:
+			refined.append(worst_pt)
 	refined.append(pts[count])
 
 	for i in refined.size() - 1:
@@ -187,7 +203,7 @@ func _tile_between(p: Vector3, q: Vector3, dir: Vector2,
 	var sx := chord / _mesh_len       # stretch so endpoints meet exactly
 	var basis := (Basis(Vector3.UP, yaw)
 		* Basis(Vector3(0, 0, 1), pitch)).scaled(
-		Vector3(sx, fence_scale, fence_scale))
+		Vector3(sx, fence_scale, depth_scale))
 	var mid := (p + q) * 0.5 + Vector3.DOWN * embed
 	out.append(Transform3D(basis, mid))
 
@@ -208,12 +224,22 @@ func _ground_robust(center: Vector2, dir: Vector2) -> float:
 	return _last_ground
 
 
+## Ground height from TERRAIN only. Other layer-2 bodies near the fence line
+## (gate posts, gate leaves, building walls) are skipped by re-casting below
+## each non-terrain hit, so tiles never seat on top of structures.
 func _ground(x: float, z: float):
 	var space := get_world_3d().direct_space_state
 	var from := Vector3(x, 200.0, z)
 	var to := Vector3(x, -200.0, z)
-	var q := PhysicsRayQueryParameters3D.create(from, to, 2)
-	var hit := space.intersect_ray(q)
-	if hit:
-		return hit.position.y
+	var exclude: Array[RID] = []
+	for _hop in 6:
+		var q := PhysicsRayQueryParameters3D.create(from, to, 2)
+		q.exclude = exclude
+		var hit := space.intersect_ray(q)
+		if hit.is_empty():
+			return null
+		var col_name := String(hit.collider.name)
+		if col_name.begins_with("Terrain") or col_name.begins_with("Mtn"):
+			return hit.position.y
+		exclude.append(hit.collider.get_rid())
 	return null

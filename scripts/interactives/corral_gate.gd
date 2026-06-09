@@ -134,9 +134,11 @@ func _make_leaf(name_: String, hinge_z: float, dir: float, leaf_len: float) -> v
 	pivot.add_child(body)
 	var cs := CollisionShape3D.new()
 	var sh := BoxShape3D.new()
-	sh.size = Vector3(collision_depth, LEAF_H + 0.2, leaf_len)
+	# slightly longer than the visual leaf so the two closed leaves overlap at
+	# the centre: no collision slit where they meet
+	sh.size = Vector3(collision_depth, LEAF_H + 0.2, leaf_len + 0.5)
 	cs.shape = sh
-	cs.position = Vector3(0, (LEAF_H + 0.2) * 0.5, mid)
+	cs.position = Vector3(0, (LEAF_H + 0.2) * 0.5, mid + 0.15 * dir)
 	body.add_child(cs)
 
 	_doors.append(pivot)

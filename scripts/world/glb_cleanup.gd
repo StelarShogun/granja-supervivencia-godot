@@ -90,8 +90,17 @@ func _add_interactive_area(
 	shape.position = Vector3(0.0, 1.0, 0.0)
 	area.add_child(shape)
 
-	var host := get_tree().current_scene.get_node_or_null("InteractiveObjects")
+	# current_scene may still be setting up its children during _ready;
+	# attach deferred so add_child never fails (see runtime error log)
+	_attach_area.call_deferred(area, world_pos)
+
+
+func _attach_area(area: Area3D, world_pos: Vector3) -> void:
+	var scene := get_tree().current_scene
+	if scene == null:
+		scene = get_parent()
+	var host := scene.get_node_or_null("InteractiveObjects")
 	if host == null:
-		host = get_tree().current_scene
+		host = scene
 	host.add_child(area)
 	area.global_position = world_pos

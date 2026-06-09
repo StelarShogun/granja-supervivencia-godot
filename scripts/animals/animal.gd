@@ -1,10 +1,27 @@
 extends Area3D
 
+## Per-species rest offsets above the ground hit point (node origin must be at
+## the model's base). The placeholder sphere has its base at y=0 -> offset 0.
+## When real GLB models land in assets/models/animals/, measure each pivot and
+## fill in its entry; species is matched against the node name (lowercase).
+const GROUND_OFFSETS := {
+	"cow": 0.0,
+	"chicken": 0.0,
+	"sheep": 0.0,
+	"pig": 0.0,
+	"goat": 0.0,
+}
+const GROUND_MASK := 2          ## terrain + structures collision layer
+const SNAP_LERP_SPEED := 8.0    ## smooth ground-follow while wandering
+
 @export var game_manager_path: NodePath = NodePath("../../GameManager")
 @export var wander_speed: float = 1.8
 @export var wander_radius: float = 120.0
 @export var wander_interval_min: float = 3.0
 @export var wander_interval_max: float = 7.0
+## Extra height above the ground hit point; overridden by GROUND_OFFSETS
+## when the node name contains a known species.
+@export var ground_offset: float = 0.0
 
 var collected: bool = false
 
@@ -20,6 +37,37 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	_wander_target = global_position
 	_wander_timer = randf_range(wander_interval_min, wander_interval_max)
+	var lower := name.to_lower()
+	for species in GROUND_OFFSETS:
+		if lower.contains(species):
+			ground_offset = GROUND_OFFSETS[species]
+			break
+	# snap after the physics space is ready (covers initial spawn, progression
+	# spawns and save-game loads -- all paths instantiate this scene)
+	_snap_when_ready.call_deferred()
+
+
+func _snap_when_ready() -> void:
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	snap_to_ground()
+
+
+## Raycast straight down onto layer 2 and rest the base on the hit point.
+## Safe fallback: keeps the current height when nothing is hit.
+func snap_to_ground() -> void:
+	var hit := _ground_hit(global_position)
+	if hit.is_empty():
+		push_warning("Animal %s: no ground under %s, keeping height" % [name, global_position])
+		return
+	global_position.y = hit.position.y + ground_offset
+
+
+func _ground_hit(at: Vector3) -> Dictionary:
+	var space := get_world_3d().direct_space_state
+	var q := PhysicsRayQueryParameters3D.create(
+		at + Vector3.UP * 60.0, at + Vector3.DOWN * 200.0, GROUND_MASK)
+	return space.intersect_ray(q)
 
 
 func _process(delta: float) -> void:
@@ -45,6 +93,14 @@ func _process(delta: float) -> void:
 	if diff.length() > 1.0:
 		var step := diff.normalized() * wander_speed * delta
 		global_position += Vector3(step.x, 0.0, step.z)
+
+	# follow the terrain while wandering (the old code kept Y frozen, which
+	# left animals hovering or buried after walking across slopes)
+	var hit := _ground_hit(global_position)
+	if not hit.is_empty():
+		var target_y: float = hit.position.y + ground_offset
+		global_position.y = lerpf(
+			global_position.y, target_y, minf(1.0, SNAP_LERP_SPEED * delta))
 
 
 func _pick_wander_target() -> void:
@@ -77,6 +133,7 @@ func drop(drop_position: Vector3) -> void:
 	_follow_target = null
 	global_position = drop_position
 	_wander_target = drop_position
+	snap_to_ground()
 
 
 func register_in_corral() -> void:
