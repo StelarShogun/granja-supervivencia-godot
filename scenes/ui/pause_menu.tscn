@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_pause_script"]
-[ext_resource type="StyleBox" path="res://assets/ui/panel_bg.tres" id="2_panel_bg"]
+[ext_resource type="Theme" path="res://assets/ui/finca_theme.tres" id="2_theme"]
 
 [node name="PauseMenu" type="CanvasLayer"]
 process_mode = 3
@@ -11,7 +11,7 @@ script = ExtResource("1_pause_script")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.42)
+color = Color(0.03, 0.02, 0.01, 0.5)
 
 [node name="Panel" type="PanelContainer" parent="."]
 anchors_preset = 8
@@ -19,11 +19,13 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -190.0
-offset_top = -140.0
-offset_right = 190.0
-offset_bottom = 140.0
-theme_override_styles/panel = ExtResource("2_panel_bg")
+offset_left = -210.0
+offset_top = -170.0
+offset_right = 210.0
+offset_bottom = 170.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
 
 [node name="MenuButtons" type="VBoxContainer" parent="Panel"]
 layout_mode = 2
@@ -32,21 +34,32 @@ alignment = 1
 
 [node name="Title" type="Label" parent="Panel/MenuButtons"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 text = "Pausa"
 horizontal_alignment = 1
 
 [node name="ResumeButton" type="Button" parent="Panel/MenuButtons"]
-custom_minimum_size = Vector2(260, 42)
+custom_minimum_size = Vector2(300, 46)
 layout_mode = 2
 text = "Continuar"
 
-[node name="SettingsButton" type="Button" parent="Panel/MenuButtons"]
-custom_minimum_size = Vector2(260, 42)
+[node name="SaveButton" type="Button" parent="Panel/MenuButtons"]
+custom_minimum_size = Vector2(300, 46)
 layout_mode = 2
-text = "Ajustes"
+text = "Guardar partida"
 
 [node name="MainMenuButton" type="Button" parent="Panel/MenuButtons"]
-custom_minimum_size = Vector2(260, 42)
+custom_minimum_size = Vector2(300, 46)
 layout_mode = 2
-text = "Volver al menú"
+text = "Volver al menú principal"
+
+[node name="SlotList" type="VBoxContainer" parent="Panel/MenuButtons"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="FeedbackLabel" type="Label" parent="Panel/MenuButtons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.9, 0.6, 1)
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1

@@ -5,6 +5,9 @@ const MAX_GROUND_GAP := 3.0
 const SKIP_GROUND_CHECK := [
 	"FenceCollider", "Granero", "BridgeCollider", "BridgeTrigger", "CaveCollider",
 	"Diablo_Cave_Spawn",
+	# gate sits in the fence opening; the vertical audit ray hits the gate's
+	# own posts/leaf (layer 2) above it, not the terrain
+	"CorralGate", "GateBody",
 ]
 const MAX_WATER_SURFACE_GAP := 4.0
 
@@ -29,7 +32,8 @@ func _run() -> void:
 
 	_audit_glb_spawns(terreno, main, space)
 	_audit_markers(main, space, "SpawnPoints")
-	_audit_markers(main, space, "ScenarioColliders")
+	# ScenarioColliders removed 2026-06-09: stale ghost colliders misaligned
+	# with the runtime-built Barn/Shed/Fence (see building.gd, fence_builder.gd).
 	_audit_markers(main, space, "InteractiveObjects")
 	_audit_water(main, space)
 	_audit_glb_content(terreno)
@@ -148,7 +152,8 @@ func _audit_glb_content(terreno: Node) -> void:
 			_issues.append("GLB missing node: %s" % name)
 		else:
 			_ok.append("GLB has %s" % name)
-	for name in ["Granero_Floor", "Corral_Fence_000", "Bridge_01"]:
+	# Barn/corral are runtime-built (building.gd / fence_builder.gd), not GLB.
+	for name in ["Bridge_Part_01", "Cave_Lip_Left", "Cave_Lip_Right"]:
 		var n := _find_node(terreno, name)
 		if n == null:
 			_issues.append("GLB missing structure: %s" % name)

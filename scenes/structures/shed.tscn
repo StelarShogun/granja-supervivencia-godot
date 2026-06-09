@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/structures/building.gd" id="1_building"]
+
+[node name="Shed" type="StaticBody3D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_building")
+footprint = Vector2(5, 4)
+wall_height = 2.7
+wall_thickness = 0.2
+door_width = 1.6
+door_height = 2.1
+roof_height = 1.7
+roof_overhang = 0.35
+wall_color = Color(0.62, 0.5, 0.34, 1)
+roof_color = Color(0.34, 0.34, 0.36, 1)
+floor_color = Color(0.34, 0.29, 0.22, 1)

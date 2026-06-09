@@ -1,6 +1,7 @@
 extends Node
 
 const ANIMAL_GOAL := 10
+const AUTOSAVE_INTERVAL := 300.0  # 5 minutos, sobre el slot activo
 
 @export var animals_in_corral: int = 0
 @export var current_progress: int = 1
@@ -46,9 +47,10 @@ func _process(delta: float) -> void:
 	if game_started and not game_over and not get_tree().paused:
 		elapsed_time += delta
 		_save_accumulator += delta
-		if _save_accumulator >= 8.0:
+		if _save_accumulator >= AUTOSAVE_INTERVAL:
 			_save_accumulator = 0.0
 			save_current_game()
+			show_message("Partida guardada", 1.2)
 
 	if _message_time_left > 0.0:
 		_message_time_left -= delta
@@ -93,11 +95,15 @@ func start_new_game() -> void:
 	_used_spawn_indices.clear()
 	_spawned_animals.clear()
 
-	if SaveManager.game_mode == 1:
-		diablo_spawn_delay = 20.0
-		show_message("Modo difícil activado. El Diablo viene.", 4.0)
-	else:
-		diablo_spawn_delay = 60.0
+	match SaveManager.game_mode:
+		SaveManager.MODE_HARD:
+			diablo_spawn_delay = 20.0
+			show_message("Modo difícil activado. El Diablo viene.", 4.0)
+		SaveManager.MODE_EASY:
+			diablo_spawn_delay = 90.0
+			show_message("Modo fácil: explora la finca con calma.", 3.0)
+		_:
+			diablo_spawn_delay = 60.0
 
 	var player := get_node_or_null(player_path)
 	var player_spawn := get_node_or_null("../SpawnPoints/Player_Spawn") as Node3D
@@ -267,7 +273,7 @@ func spawn_diablo_after_delay(request_id: int = 0) -> void:
 	var wait_time := maxf(0.0, diablo_spawn_delay - elapsed_time)
 	if wait_time > 0.0:
 		await get_tree().create_timer(wait_time).timeout
-	if SaveManager.game_mode == 0:
+	if SaveManager.game_mode != SaveManager.MODE_HARD:
 		while not _is_night():
 			if local_request != _spawn_request_id or not game_started or game_over:
 				return
@@ -280,7 +286,7 @@ func _is_night() -> bool:
 	var dnc := get_tree().get_first_node_in_group("day_night_cycle")
 	if dnc == null:
 		return true
-	return sin(float(dnc.get("time_of_day")) * TAU) <= 0.0
+	return sin(float(dnc.get("time_of_day")) * TAU) < 0.0
 
 
 func spawn_diablo(show_alert: bool = true) -> void:
@@ -362,16 +368,6 @@ func update_player_health(value: float, max_value: float) -> void:
 		ui.set_health(value, max_value)
 
 
-func update_player_oxygen(value: float, max_value: float, visible: bool) -> void:
-	var ui := get_node_or_null(ui_path)
-	if ui == null:
-		return
-	if ui.has_method("set_oxygen"):
-		ui.set_oxygen(value, max_value)
-	if ui.has_method("show_oxygen_bar"):
-		ui.show_oxygen_bar(visible)
-
-
 func set_player_safe_zone(value: bool) -> void:
 	if player_in_safe_zone == value:
 		return
@@ -406,7 +402,7 @@ func _objective_message() -> String:
 	if game_over:
 		return "Derrota: te quedaste sin vida."
 
-	var carry_hint := " (1 animal a la vez)" if SaveManager.game_mode == 1 else ""
+	var carry_hint := " (1 animal a la vez)" if SaveManager.game_mode == SaveManager.MODE_HARD else ""
 	match current_progress:
 		1:
 			return "Recolecta animales y llévalos al corral." + carry_hint

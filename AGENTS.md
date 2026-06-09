@@ -114,18 +114,19 @@ The map must have:
 - Usar estilo /caveman (corto, directo, técnico) en conversación según CLAUDE.md.
 - Integración visual del agua (boujie_water_shader) la gestiona Claude Code; no duplicar ese trabajo aquí.
 - Verificar con Godot AI MCP (editor conectado) cuando esté disponible; no usar headless por defecto.
+- Terreno Blender roto: restaurar desde UNA `liderazgo 2/Terreno_Finca.blend` (= LFS); no boolean/sculpt con props sobre `Terrain_Main`.
 
 ## Learned Workspace Facts
 
 - Jugador usa barra de 100 HP (no 3 vidas); Cacique cura; derrota a 0 HP.
 - Sin puntuación en HUD, guardado ni pantalla de victoria.
-- Animales solo cuentan al entregarlos en el corral (Normal y modo difícil).
-- Progresión niveles 1/2/3 por animales en corral (umbrales 3 y 6; meta 10).
-- Modo difícil = `game_mode` 1 (UI renombrado; antes "Modo Kojima").
-- Terreno activo: `Terreno_Finca.glb` desde `Terreno_Finca.blend`; Terrain3D abandonado; agua opaca no en GLB export.
+- Animales solo cuentan al entregarlos en el corral (Normal y modo difícil); progresión 3/6/10; modo difícil = `game_mode` 1.
+- Terreno activo: `Terreno_Finca.glb`/`.blend`; Terrain3D abandonado; agua opaca no en GLB; restore UNA = git LFS HEAD.
+- Profundidad geométrica solo cauce río (~30 m) + lago (~100 m); `tools/blender/carve_river_lake_gorge.py`; puente `wooden_bridge_roofed_bridge_cap_-24mb.glb`.
+- Machete fondo lago (`Sp_Machete`); única arma vs Diablo (F); Cacique ≠ machete; cuerda `Sp_Rope_Top/Bottom` (E); `glb_cleanup.gd` spawnea interactives.
+- Prohibido boolean `Machete` en `Terrain_Main`; no usar `remove_lake_keep_bridge_river.py` para reparar geometría rota.
 - `vendor/archives/` guarda repos de terceros con `.gdignore`; plugins activos permanecen en `addons/`.
 - `main.tscn`: Terreno_Finca, TerrainCollision (`terrain_collision.gd`), WaterGameplay, WaterVisual; sin Terrain3D/PropsSpawner/StructuresVisual.
 - Spawn/alineación: `Terreno_Finca` identidad; Player_Spawn=`Sp_Player` GLB; tools/godot/check_spawn_ground.gd, audit_level_alignment.gd, sync_spawns_from_glb.gd.
-- GLB pendiente: `Corral_01`, `Bridge_01`, `Barn_01` en origen; `Granero` ausente (sí Granero_Floor/Roof).
-- Nadar y bucear implementados en el jugador.
-- Cave trigger con aviso si Diablo no salió y flag `player_entered_cave` en guardado.
+- GLB pendiente: `Corral_01`, `Barn_01` en origen; `Granero` ausente (sí Granero_Floor/Roof); cráter bosque fuera del cauce no debe existir.
+- Nadar/bucear implementados; cave trigger con aviso si Diablo no salió y flag `player_entered_cave` en guardado.

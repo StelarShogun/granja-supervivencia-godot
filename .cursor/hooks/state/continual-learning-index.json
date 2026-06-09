@@ -1,8 +1,11 @@
 {
   "version": 1,
-  "processedAtMs": 1780704512443,
+  "processedAtMs": 1780873325763,
   "transcripts": {
-    "/home/dilan/.cursor/projects/home-dilan-Documentos-GitHub-granja-supervivencia-godot/agent-transcripts/deca31af-504c-4561-9718-0c6d2ccf2ac1/deca31af-504c-4561-9718-0c6d2ccf2ac1.jsonl": 1780704442,
+    "/home/dilan/.cursor/projects/home-dilan-Documentos-GitHub-granja-supervivencia-godot/agent-transcripts/39b72ffe-b345-4182-8d64-95603a3abaa1/39b72ffe-b345-4182-8d64-95603a3abaa1.jsonl": 1780873280,
+    "/home/dilan/.cursor/projects/home-dilan-Documentos-GitHub-granja-supervivencia-godot/agent-transcripts/d8de45a1-bdfe-4a7b-a8fb-67509cccb3df/d8de45a1-bdfe-4a7b-a8fb-67509cccb3df.jsonl": 1780807632,
+    "/home/dilan/.cursor/projects/home-dilan-Documentos-GitHub-granja-supervivencia-godot/agent-transcripts/deca31af-504c-4561-9718-0c6d2ccf2ac1/deca31af-504c-4561-9718-0c6d2ccf2ac1.jsonl": 1780718457,
+    "/home/dilan/.cursor/projects/home-dilan-Documentos-GitHub-granja-supervivencia-godot/agent-transcripts/deca31af-504c-4561-9718-0c6d2ccf2ac1/subagents/c0ee0cd3-93f8-434f-9bbc-be0bc2e108c7.jsonl": 1780704533,
     "/home/dilan/.cursor/projects/home-dilan-Documentos-GitHub-granja-supervivencia-godot/agent-transcripts/deca31af-504c-4561-9718-0c6d2ccf2ac1/subagents/0292aff3-7041-4a7e-b243-63df2d317caa.jsonl": 1780694783,
     "/home/dilan/.cursor/projects/home-dilan-Documentos-GitHub-granja-supervivencia-godot/agent-transcripts/deca31af-504c-4561-9718-0c6d2ccf2ac1/subagents/96323550-932d-4ceb-8578-73305ee88978.jsonl": 1780679478
   }

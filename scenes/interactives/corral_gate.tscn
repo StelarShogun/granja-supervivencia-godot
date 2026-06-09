@@ -1,28 +1,13 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/interactives/corral_gate.gd" id="1_gate_script"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gate"]
-albedo_color = Color(0.48, 0.28, 0.13, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_gate"]
-size = Vector3(2.4, 1.2, 0.18)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_gate"]
-size = Vector3(2.4, 1.2, 0.18)
+[ext_resource type="PackedScene" uid="uid://c7mnuaslfghvg" path="res://assets/models/props/structure/fence_unit.glb" id="2_fence_unit"]
 
 [node name="CorralGate" type="Area3D" groups=["interactives"]]
-script = ExtResource("1_gate_script")
 collision_layer = 8
 collision_mask = 1
 monitoring = true
 monitorable = true
-
-[node name="GateVisual" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.6, 0)
-mesh = SubResource("BoxMesh_gate")
-surface_material_override/0 = SubResource("StandardMaterial3D_gate")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.6, 0)
-shape = SubResource("BoxShape3D_gate")
+script = ExtResource("1_gate_script")
+fence_glb = ExtResource("2_fence_unit")
+gate_width = 8.0

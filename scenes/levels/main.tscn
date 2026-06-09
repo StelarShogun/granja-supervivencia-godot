@@ -21,12 +21,15 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="13_pause"]
 [ext_resource type="Script" uid="uid://vmwpla5khke0" path="res://scripts/interactives/safe_corral_zone.gd" id="15_safe_zone"]
 [ext_resource type="Script" uid="uid://brwqfqr0dti1m" path="res://scripts/core/sky_controller.gd" id="17_sky_ctl"]
+[ext_resource type="PackedScene" path="res://scenes/structures/barn.tscn" id="30_oix75"]
+[ext_resource type="PackedScene" path="res://scenes/structures/shed.tscn" id="31_masl8"]
+[ext_resource type="Script" uid="uid://btkbbvkw6k5w2" path="res://scripts/structures/fence_builder.gd" id="32_2qtp0"]
 [ext_resource type="Script" uid="uid://bpfp5a2b2j3xf" path="res://scripts/ui/victory_screen.gd" id="32_oix75"]
+[ext_resource type="PackedScene" uid="uid://c7mnuaslfghvg" path="res://assets/models/props/structure/fence_unit.glb" id="33_x2df8"]
 [ext_resource type="PackedScene" path="res://scenes/ui/defeat_screen.tscn" id="41_defeat"]
 [ext_resource type="PackedScene" path="res://scenes/interactives/cave_trigger.tscn" id="42_cave"]
 [ext_resource type="PackedScene" path="res://scenes/collectibles/cacique.tscn" id="43_cacique"]
 [ext_resource type="Script" uid="uid://cdwqrebvfsf8r" path="res://scripts/core/day_night_bridge.gd" id="44_day_night"]
-[ext_resource type="Script" uid="uid://dqq0luiuq33jg" path="res://scripts/interactives/water_area.gd" id="46_water_area"]
 [ext_resource type="PackedScene" uid="uid://dtldk10kxdw8h" path="res://assets/models/environment/Terreno_Finca.glb" id="50_terreno"]
 [ext_resource type="Script" uid="uid://cpa1h5jcoh8tk" path="res://scripts/world/terrain_collision.gd" id="51_terrcol"]
 [ext_resource type="Script" uid="uid://dbs7hbk40pasc" path="res://scripts/world/glb_cleanup.gd" id="52_glbclean"]
@@ -84,8 +87,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.0049497485, 0.0049497485)
-shader_parameter/cirrus_position2 = Vector2(0.0049497485, 0.0049497485)
+shader_parameter/cirrus_position1 = Vector2(0.19803096, 0.19803096)
+shader_parameter/cirrus_position2 = Vector2(0.19803096, 0.19803096)
 shader_parameter/cirrus_texture = ExtResource("2_gexqn")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -95,7 +98,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(0.024748774, 0.024748774)
+shader_parameter/cumulus_position = Vector2(11.001941, 11.001941)
 shader_parameter/cumulus_texture = ExtResource("3_kc8j3")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -135,33 +138,6 @@ size = Vector3(460, 90, 4)
 [sub_resource type="BoxShape3D" id="BoxShape3D_map_bound_z"]
 size = Vector3(4, 90, 460)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_fence_long"]
-size = Vector3(60.5, 5.5, 0.55)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_fence_full_side"]
-size = Vector3(0.55, 5.8, 44.5)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_fence_gate_side"]
-size = Vector3(0.55, 5.5, 18.9)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_bridge_collider"]
-size = Vector3(24.5, 5.4, 26.8)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_cave_collider"]
-size = Vector3(30, 14, 12)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_granero_n"]
-size = Vector3(20, 9, 0.5)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_granero_s"]
-size = Vector3(20, 9, 0.5)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_granero_e"]
-size = Vector3(0.5, 9, 14)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_granero_w"]
-size = Vector3(0.5, 9, 14)
-
 [sub_resource type="BoxMesh" id="BoxMesh_corral"]
 size = Vector3(5, 0.08, 5)
 
@@ -172,10 +148,7 @@ albedo_color = Color(0.26, 0.58, 0.24, 1)
 size = Vector3(5, 2, 5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_safe_corral_zone"]
-size = Vector3(24, 6, 15)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_riv_bridge"]
-size = Vector3(50, 4, 8)
+size = Vector3(58, 6, 56)
 
 [node name="Main" type="Node3D" unique_id=1261648568]
 
@@ -231,6 +204,7 @@ script = ExtResource("51_terrcol")
 script = ExtResource("52_glbclean")
 
 [node name="Terreno_Finca" parent="Level" unique_id=80625294 instance=ExtResource("50_terreno")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.471107, 2.031498, 22.393354)
 
 [node name="MapBounds" type="Node3D" parent="." unique_id=1314561574]
 
@@ -266,130 +240,51 @@ collision_mask = 5
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MapBounds/Wall_West" unique_id=1409746987]
 shape = SubResource("BoxShape3D_map_bound_z")
 
-[node name="ScenarioColliders" type="Node3D" parent="." unique_id=421826066]
-
-[node name="FenceCollider_01" type="StaticBody3D" parent="ScenarioColliders" unique_id=1331343232]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 132.653, 18.81, -146.866)
-collision_layer = 2
-collision_mask = 5
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ScenarioColliders/FenceCollider_01" unique_id=1494604746]
-shape = SubResource("BoxShape3D_fence_long")
-
-[node name="FenceCollider_02" type="StaticBody3D" parent="ScenarioColliders" unique_id=798537143]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 162.653, 20.65, -124.866)
-collision_layer = 2
-collision_mask = 5
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ScenarioColliders/FenceCollider_02" unique_id=92062776]
-shape = SubResource("BoxShape3D_fence_full_side")
-
-[node name="FenceCollider_03" type="StaticBody3D" parent="ScenarioColliders" unique_id=477255325]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 132.653, 19.89, -102.866)
-collision_layer = 2
-collision_mask = 5
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ScenarioColliders/FenceCollider_03" unique_id=1486458640]
-shape = SubResource("BoxShape3D_fence_long")
-
-[node name="FenceCollider_04" type="StaticBody3D" parent="ScenarioColliders" unique_id=2123140245]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 102.653, 17.4, -112.116)
-collision_layer = 2
-collision_mask = 5
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ScenarioColliders/FenceCollider_04" unique_id=533258843]
-shape = SubResource("BoxShape3D_fence_gate_side")
-
-[node name="FenceCollider_05" type="StaticBody3D" parent="ScenarioColliders" unique_id=672437579]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 102.653, 16.92, -137.616)
-collision_layer = 2
-collision_mask = 5
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ScenarioColliders/FenceCollider_05" unique_id=570518809]
-shape = SubResource("BoxShape3D_fence_gate_side")
-
-[node name="BridgeCollider" type="StaticBody3D" parent="ScenarioColliders" unique_id=238462736]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.6, 15.024, -10)
-collision_layer = 2
-collision_mask = 5
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ScenarioColliders/BridgeCollider" unique_id=2053888897]
-shape = SubResource("BoxShape3D_bridge_collider")
-
-[node name="CaveCollider" type="StaticBody3D" parent="ScenarioColliders" unique_id=1685864508]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 165, 120.945, 178)
-collision_layer = 2
-collision_mask = 5
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ScenarioColliders/CaveCollider" unique_id=1848373517]
-shape = SubResource("BoxShape3D_cave_collider")
-
-[node name="Granero" type="StaticBody3D" parent="ScenarioColliders" unique_id=-2094967295]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82, 17.57, -113)
-collision_layer = 2
-collision_mask = 5
-
-[node name="CSNorth" type="CollisionShape3D" parent="ScenarioColliders/Granero" unique_id=-2094967292]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -7)
-shape = SubResource("BoxShape3D_granero_n")
-
-[node name="CSSouth" type="CollisionShape3D" parent="ScenarioColliders/Granero" unique_id=-2094967291]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7)
-shape = SubResource("BoxShape3D_granero_s")
-
-[node name="CSEast" type="CollisionShape3D" parent="ScenarioColliders/Granero" unique_id=-2094967290]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 0)
-shape = SubResource("BoxShape3D_granero_e")
-
-[node name="CSWest" type="CollisionShape3D" parent="ScenarioColliders/Granero" unique_id=-2094967289]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 0)
-shape = SubResource("BoxShape3D_granero_w")
-
 [node name="SpawnPoints" type="Node3D" parent="." unique_id=60280611]
 
 [node name="Player_Spawn" type="Marker3D" parent="SpawnPoints" unique_id=2002230670]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 98.763, 12.929, -66.094)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 61.29224, 14.9596, -43.70052)
 
 [node name="Diablo_Spawn" type="Marker3D" parent="SpawnPoints" unique_id=610534272]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 146, 111.68, 132)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 108.5289, 113.7112, 154.3934)
 
 [node name="Diablo_Cave_Spawn" type="Marker3D" parent="SpawnPoints" unique_id=1843308276]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 165, 95.445, 178)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 127.5289, 94.22329, 200.3934)
 
 [node name="AnimalSpawns" type="Node3D" parent="SpawnPoints" unique_id=643299719]
 
 [node name="AnimalSpawn_01" type="Marker3D" parent="SpawnPoints/AnimalSpawns" unique_id=2058651558]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 16.999, -46)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.52889, 18.60725, -23.60665)
 
 [node name="AnimalSpawn_02" type="Marker3D" parent="SpawnPoints/AnimalSpawns" unique_id=1282820926]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82, 16.179, -54)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44.52889, 18.21133, -31.60665)
 
 [node name="AnimalSpawn_03" type="Marker3D" parent="SpawnPoints/AnimalSpawns" unique_id=1093283227]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112, 10.337, -78)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 74.52889, 12.36815, -55.60664)
 
 [node name="AnimalSpawn_04" type="Marker3D" parent="SpawnPoints/AnimalSpawns" unique_id=786750282]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -92, -2.612, -120)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -129.4711, -13.52364, -97.60664)
 
 [node name="AnimalSpawn_05" type="Marker3D" parent="SpawnPoints/AnimalSpawns" unique_id=1009075097]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -128, -1.552, -132)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -165.4711, -100.8185, -109.6066)
 
 [node name="AnimalSpawn_06" type="Marker3D" parent="SpawnPoints/AnimalSpawns" unique_id=521767941]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -160, -1.289, -118)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -197.4711, -100.8185, -95.60664)
 
 [node name="AnimalSpawn_07" type="Marker3D" parent="SpawnPoints/AnimalSpawns" unique_id=1719375631]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 108, 86.759, 120)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.52889, 83.49427, 142.3934)
 
 [node name="AnimalSpawn_08" type="Marker3D" parent="SpawnPoints/AnimalSpawns" unique_id=306783675]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 130, 109.628, 150)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 92.52889, 111.6599, 172.3934)
 
 [node name="AnimalSpawn_09" type="Marker3D" parent="SpawnPoints/AnimalSpawns" unique_id=400104124]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 148, 89.673, 188)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 110.5289, 91.70438, 210.3934)
 
 [node name="AnimalSpawn_10" type="Marker3D" parent="SpawnPoints/AnimalSpawns" unique_id=1901384436]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 176, 105.462, 138)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138.5289, 107.4935, 160.3934)
 
 [node name="CorralZone" type="Area3D" parent="SpawnPoints" unique_id=2077413195 groups=["corral_zone", "interactives"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 124.653, 6.573, -113.366)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 121, 7.6, -130)
 collision_layer = 8
 script = ExtResource("10_corral_zone")
 
@@ -401,7 +296,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_corral")
 shape = SubResource("BoxShape3D_corral")
 
 [node name="SafeCorralZone" type="Area3D" parent="SpawnPoints" unique_id=1650579616 groups=["safe_zone"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 124.653, 8.573, -113.366)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 121, 9, -130)
 collision_layer = 32
 script = ExtResource("15_safe_zone")
 
@@ -409,10 +304,10 @@ script = ExtResource("15_safe_zone")
 shape = SubResource("BoxShape3D_safe_corral_zone")
 
 [node name="Player" parent="." unique_id=728367598 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 98.763, 12.929, -66.094)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 61.29224, 14.9596, -43.70052)
 
 [node name="Diablo" parent="." unique_id=1782360643 instance=ExtResource("3_diablo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 165, 92.5, 178)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 127.5289, 94.22329, 200.3934)
 visible = false
 spawn_path = NodePath("../SpawnPoints/Diablo_Cave_Spawn")
 
@@ -425,7 +320,7 @@ script = ExtResource("8_game_manager")
 [node name="InteractiveObjects" type="Node3D" parent="." unique_id=1640366998]
 
 [node name="CorralGate" parent="InteractiveObjects" unique_id=2090008324 instance=ExtResource("5_gate")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 101.242, 6.234, -124.866)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 90, 6.3, -128.866)
 
 [node name="MudTrap_01" parent="InteractiveObjects" unique_id=155948757 instance=ExtResource("6_mud")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.653, 12.204844, -30.54949)
@@ -437,10 +332,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 17.784002, -6)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 36.29, 28)
 
 [node name="BridgeTrigger" parent="InteractiveObjects" unique_id=1818229202 instance=ExtResource("7_bridge")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.6, 16.2, -10)
+transform = Transform3D(-0.5664, 0, 0.8241, 0, 1, 0, -0.8241, 0, -0.5664, 19.65, 14.5, -14.95)
 
 [node name="CaveTrigger" parent="InteractiveObjects" unique_id=1111796041 instance=ExtResource("42_cave")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 166, 94.945, 185)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 128.5289, 96.97662, 207.3934)
 
 [node name="Cacique_01" parent="InteractiveObjects" unique_id=615214371 instance=ExtResource("43_cacique")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 95, 12.365, -70)
@@ -493,14 +388,19 @@ text = "Jugar de nuevo"
 layout_mode = 2
 text = "Menú principal"
 
-[node name="WaterGameplay" type="Node3D" parent="." unique_id=2100000001]
+[node name="Structures" type="Node3D" parent="." unique_id=1202661653]
 
-[node name="RiverArea" type="Area3D" parent="WaterGameplay" unique_id=2100000006]
-script = ExtResource("46_water_area")
-deep_water = false
-use_body_y_as_surface = true
-enter_message = "Entraste al río. Shift=nadar rápido. Ctrl=bucear. Espacio=subir."
+[node name="Barn" parent="Structures" unique_id=1032291434 instance=ExtResource("30_oix75")]
+transform = Transform3D(-1, 0, 2.5351817e-06, 0, 1, 0, -2.5351817e-06, 0, -1, 134, 10.02, -146)
 
-[node name="RiverSeg_Bridge" type="CollisionShape3D" parent="WaterGameplay/RiverArea" unique_id=1953963724]
-transform = Transform3D(0.8686, 0, -0.4854, 0, 1, 0, 0.4854, 0, 0.8686, 26.5, 14.5, -10)
-shape = SubResource("BoxShape3D_riv_bridge")
+[node name="Shed" parent="Structures" unique_id=1274304688 instance=ExtResource("31_masl8")]
+transform = Transform3D(-1, 0, 2.5351817e-06, 0, 1, 0, -2.5351817e-06, 0, -1, 103, 8.35, -150)
+
+[node name="Fence" type="Node3D" parent="Structures" unique_id=59501050]
+script = ExtResource("32_2qtp0")
+fence_glb = ExtResource("33_x2df8")
+enclosure_min = Vector2(90, -160)
+enclosure_max = Vector2(152, -100)
+gate_side = 2
+gate_center = -124.866
+gate_width = 8.0

@@ -1,29 +1,19 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/collectibles/cacique.gd" id="1_cacique"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cacique"]
-albedo_color = Color(0.75, 0.55, 0.15, 1)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_cacique"]
-top_radius = 0.12
-bottom_radius = 0.16
-height = 0.45
+[ext_resource type="PackedScene" uid="uid://bqmsalnyrrerb" path="res://assets/models/props/cacique_bottle.glb" id="2_bottle"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_cacique"]
-height = 0.5
-radius = 0.2
+height = 0.35
+radius = 0.1
 
 [node name="Cacique" type="Area3D" groups=["interactives"]]
 collision_layer = 8
 collision_mask = 1
 script = ExtResource("1_cacique")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, 0)
-mesh = SubResource("CylinderMesh_cacique")
-surface_material_override/0 = SubResource("StandardMaterial3D_cacique")
+[node name="BottleMesh" parent="." instance=ExtResource("2_bottle")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.175, 0)
 shape = SubResource("CylinderShape3D_cacique")

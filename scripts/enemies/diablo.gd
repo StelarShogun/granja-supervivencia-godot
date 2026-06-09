@@ -33,6 +33,9 @@ var target_in_safe_zone: bool = false
 var _cooldown_left: float = 0.0
 var _freeze_cooldown_left: float = 0.0
 var _daylight_hidden: bool = false
+var _health: float = 100.0
+
+const DIABLO_MAX_HEALTH := 100.0
 
 @onready var _hit_box: Area3D = $HitBox
 
@@ -69,8 +72,8 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	# Normal mode: hide during daytime; modo difícil: always visible
-	if SaveManager.game_mode == 0:
+	# Normal/fácil: hide during daytime; modo difícil: always visible
+	if SaveManager.game_mode != SaveManager.MODE_HARD:
 		var night := _is_night()
 		if not night and not _daylight_hidden:
 			_daylight_hidden = true
@@ -97,8 +100,12 @@ func _physics_process(delta: float) -> void:
 	# Magic freeze
 	var dist := global_position.distance_to(player.global_position)
 	if dist < freeze_range and _freeze_cooldown_left <= 0.0:
-		var dur := freeze_duration_kojima if SaveManager.game_mode == 1 else freeze_duration_normal
-		var cd := freeze_cooldown_kojima if SaveManager.game_mode == 1 else freeze_cooldown_normal
+		var hard := SaveManager.game_mode == SaveManager.MODE_HARD
+		var dur := freeze_duration_kojima if hard else freeze_duration_normal
+		var cd := freeze_cooldown_kojima if hard else freeze_cooldown_normal
+		if SaveManager.game_mode == SaveManager.MODE_EASY:
+			dur *= 0.6
+			cd *= 1.5
 		if player.has_method("apply_freeze"):
 			player.apply_freeze(dur)
 			_freeze_cooldown_left = cd
@@ -127,7 +134,11 @@ func _physics_process(delta: float) -> void:
 
 
 func set_progress(progress: int) -> void:
-	var speeds := speed_kojima if SaveManager.game_mode == 1 else speed_normal
+	var speeds := speed_normal
+	if SaveManager.game_mode == SaveManager.MODE_HARD:
+		speeds = speed_kojima
+	elif SaveManager.game_mode == SaveManager.MODE_EASY:
+		speeds = speed_normal * 0.7
 	match progress:
 		1:
 			chase_speed = speeds.x
@@ -157,12 +168,17 @@ func reset_to_spawn() -> void:
 
 func activate() -> void:
 	active = true
-	_daylight_hidden = false
-	show()
+	reset_health()
 	set_physics_process(true)
 	if _hit_box != null:
 		_hit_box.monitoring = true
 		_hit_box.monitorable = true
+	if SaveManager.game_mode != SaveManager.MODE_HARD and not _is_night():
+		_daylight_hidden = true
+		hide()
+	else:
+		_daylight_hidden = false
+		show()
 
 
 func deactivate() -> void:
@@ -174,6 +190,25 @@ func deactivate() -> void:
 	if _hit_box != null:
 		_hit_box.monitoring = false
 		_hit_box.monitorable = false
+
+
+func receive_machete_strike(amount: float) -> bool:
+	if not active:
+		return false
+	_health = maxf(0.0, _health - amount)
+	var manager := _get_game_manager()
+	if _health <= 0.0:
+		deactivate()
+		if manager != null and manager.has_method("show_message"):
+			manager.show_message("El Diablo cayó derrotado por el machete.", 3.0)
+		return true
+	if manager != null and manager.has_method("show_message"):
+		manager.show_message("El Diablo recibió daño. Vida restante: %.0f." % _health, 1.5)
+	return true
+
+
+func reset_health() -> void:
+	_health = DIABLO_MAX_HEALTH
 
 
 func _on_hit_box_body_entered(body: Node3D) -> void:
@@ -188,12 +223,16 @@ func _on_hit_box_body_entered(body: Node3D) -> void:
 		return
 
 	# Modo difícil: drop carried animal on hit
-	if SaveManager.game_mode == 1 and body.has_method("drop_animal"):
+	if SaveManager.game_mode == SaveManager.MODE_HARD and body.has_method("drop_animal"):
 		body.drop_animal()
 
 	var damaged: bool = body.receive_damage()
 	if damaged:
-		var cd := 0.4 if SaveManager.game_mode == 1 else contact_cooldown
+		var cd := contact_cooldown
+		if SaveManager.game_mode == SaveManager.MODE_HARD:
+			cd = 0.4
+		elif SaveManager.game_mode == SaveManager.MODE_EASY:
+			cd = contact_cooldown * 2.0
 		_cooldown_left = cd
 		if manager != null and manager.has_method("show_message"):
 			manager.show_message("El Diablo te alcanzó.", 1.7)
@@ -204,7 +243,7 @@ func _is_night() -> bool:
 	var dnc := get_tree().get_first_node_in_group("day_night_cycle")
 	if dnc == null:
 		return true
-	return sin(float(dnc.get("time_of_day")) * TAU) <= 0.0
+	return sin(float(dnc.get("time_of_day")) * TAU) < 0.0
 
 
 func _apply_gravity(delta: float) -> void:

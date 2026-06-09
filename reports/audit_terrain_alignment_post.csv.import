@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://tv0s8wcs3n1r"
+
+[deps]
+
+files=["res://reports/audit_terrain_alignment_post.collection.translation", "res://reports/audit_terrain_alignment_post.zone.translation", "res://reports/audit_terrain_alignment_post.cx.translation", "res://reports/audit_terrain_alignment_post.cy.translation", "res://reports/audit_terrain_alignment_post.bottom.translation", "res://reports/audit_terrain_alignment_post.ground.translation", "res://reports/audit_terrain_alignment_post.gap.translation", "res://reports/audit_terrain_alignment_post.action.translation"]
+
+source_file="res://reports/audit_terrain_alignment_post.csv"
+dest_files=["res://reports/audit_terrain_alignment_post.collection.translation", "res://reports/audit_terrain_alignment_post.zone.translation", "res://reports/audit_terrain_alignment_post.cx.translation", "res://reports/audit_terrain_alignment_post.cy.translation", "res://reports/audit_terrain_alignment_post.bottom.translation", "res://reports/audit_terrain_alignment_post.ground.translation", "res://reports/audit_terrain_alignment_post.gap.translation", "res://reports/audit_terrain_alignment_post.action.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
