@@ -83,10 +83,7 @@ func load_settings() -> void:
 
 func apply_settings() -> void:
 	_volume = float(_volume_slider.value)
-	var master_bus := AudioServer.get_bus_index("Master")
-	if master_bus >= 0:
-		AudioServer.set_bus_volume_db(master_bus, linear_to_db(maxf(_volume, 0.001)))
-		AudioServer.set_bus_mute(master_bus, _volume <= 0.001)
+	AudioManager.apply_master_volume(_volume)
 	_refresh_action_labels()
 
 

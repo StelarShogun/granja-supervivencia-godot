@@ -148,6 +148,7 @@ func _make_leaf(name_: String, hinge_z: float, dir: float, leaf_len: float) -> v
 
 func interact(_player: Node) -> void:
 	is_open = not is_open
+	AudioManager.play_gate()
 	var swing := deg_to_rad(open_angle_degrees)
 	for i in _doors.size():
 		var target := _closed_rot[i]

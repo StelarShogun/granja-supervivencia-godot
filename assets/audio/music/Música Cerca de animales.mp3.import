@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://qwx6ku0iun4g"
+path="res://.godot/imported/Música Cerca de animales.mp3-1479caad6108d66e1653c932e1b26cca.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/music/Música Cerca de animales.mp3"
+dest_files=["res://.godot/imported/Música Cerca de animales.mp3-1479caad6108d66e1653c932e1b26cca.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

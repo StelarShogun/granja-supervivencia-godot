@@ -15,6 +15,10 @@ const GROUND_MASK := 2          ## terrain + structures collision layer
 const SNAP_LERP_SPEED := 8.0    ## smooth ground-follow while wandering
 
 @export var game_manager_path: NodePath = NodePath("../../GameManager")
+@export var animal_kind: String = "vaca"
+@export var proximity_radius: float = 18.0
+@export var proximity_bleat_min: float = 6.0
+@export var proximity_bleat_max: float = 14.0
 @export var wander_speed: float = 1.8
 @export var wander_radius: float = 120.0
 @export var wander_interval_min: float = 3.0
@@ -27,9 +31,12 @@ var collected: bool = false
 
 var _wander_target: Vector3
 var _wander_timer: float = 0.0
+var _bleat_timer: float = 0.0
 var _has_start: bool = false
 var _following: bool = false
 var _follow_target: Node3D = null
+var _voice: AudioStreamPlayer3D
+var _cached_player: Node3D = null
 
 
 func _ready() -> void:
@@ -37,6 +44,10 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	_wander_target = global_position
 	_wander_timer = randf_range(wander_interval_min, wander_interval_max)
+	_bleat_timer = randf_range(5.0, 8.0)
+	_resolve_animal_kind()
+	_setup_voice()
+	_cached_player = get_tree().get_first_node_in_group("player") as Node3D
 	var lower := name.to_lower()
 	for species in GROUND_OFFSETS:
 		if lower.contains(species):
@@ -102,6 +113,62 @@ func _process(delta: float) -> void:
 		global_position.y = lerpf(
 			global_position.y, target_y, minf(1.0, SNAP_LERP_SPEED * delta))
 
+	_update_proximity_voice(delta)
+
+
+func _resolve_animal_kind() -> void:
+	if animal_kind != "vaca":
+		return
+	var lower := name.to_lower()
+	if lower.contains("chicken") or lower.contains("gallina"):
+		animal_kind = "gallina"
+	elif lower.contains("sheep") or lower.contains("oveja"):
+		animal_kind = "oveja"
+	elif lower.contains("goat") or lower.contains("cabra"):
+		animal_kind = "cabra"
+	elif lower.contains("cow") or lower.contains("vaca"):
+		animal_kind = "vaca"
+
+
+func _setup_voice() -> void:
+	_voice = AudioStreamPlayer3D.new()
+	_voice.name = "AnimalVoice"
+	_voice.max_distance = proximity_radius
+	_voice.unit_size = 5.0
+	_voice.bus = &"Master"
+	var stream := AudioManager.get_animal_stream(animal_kind)
+	if stream != null:
+		_voice.stream = stream
+	add_child(_voice)
+
+
+func _update_proximity_voice(delta: float) -> void:
+	_ensure_player()
+	if _cached_player == null:
+		return
+	var distance := global_position.distance_to(_cached_player.global_position)
+	if distance > proximity_radius:
+		_bleat_timer = minf(_bleat_timer, randf_range(2.0, 4.0))
+		return
+	_bleat_timer -= delta
+	if _bleat_timer <= 0.0:
+		_bleat_spatial(distance)
+		_bleat_timer = randf_range(proximity_bleat_min, proximity_bleat_max)
+
+
+func _bleat_spatial(distance: float) -> void:
+	if _voice == null or _voice.stream == null or _voice.playing:
+		return
+	var closeness := 1.0 - clampf(distance / proximity_radius, 0.0, 1.0)
+	_voice.volume_db = lerpf(-24.0, -3.0, closeness)
+	_voice.pitch_scale = randf_range(0.94, 1.06)
+	_voice.play()
+
+
+func _ensure_player() -> void:
+	if _cached_player == null or not is_instance_valid(_cached_player):
+		_cached_player = get_tree().get_first_node_in_group("player") as Node3D
+
 
 func _pick_wander_target() -> void:
 	var angle := randf() * TAU
@@ -144,6 +211,7 @@ func register_in_corral() -> void:
 	_follow_target = null
 	monitoring = false
 	monitorable = false
+	AudioManager.play_animal_sfx(animal_kind, -3.0)
 	hide()
 	call_deferred("queue_free")
 
@@ -163,6 +231,7 @@ func _try_pickup(player: Node) -> void:
 			_following = true
 			_follow_target = player as Node3D
 			set_deferred("monitoring", false)
+			_bleat_spatial(0.5)
 
 
 func _get_game_manager() -> Node:

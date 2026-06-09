@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://yjkj8f5h4bki"
+path="res://.godot/imported/Múscia pájaros cantando.mp3-1689373f4fca1bc65bd8868b4ec1ffda.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/music/Múscia pájaros cantando.mp3"
+dest_files=["res://.godot/imported/Múscia pájaros cantando.mp3-1689373f4fca1bc65bd8868b4ec1ffda.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

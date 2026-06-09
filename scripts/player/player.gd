@@ -39,6 +39,9 @@ var _frozen_left: float = 0.0
 var _mud_slow_left: float = 0.0
 var _interaction_targets: Array[Node] = []
 var _camera_pitch: float = -15.0
+var _footstep_timer: float = 0.0
+var _run_wind_intensity: float = 0.0
+var _was_moving: bool = false
 
 @onready var _interaction_area: Area3D = $InteractionArea
 @onready var _visual_mesh: MeshInstance3D = $MeshInstance3D
@@ -88,6 +91,7 @@ func _physics_process(delta: float) -> void:
 
 	var manager := _get_game_manager()
 	if manager != null and bool(manager.get("game_over")):
+		_run_wind_intensity = 0.0
 		velocity.x = 0.0
 		velocity.z = 0.0
 		_apply_land_gravity(delta)
@@ -95,15 +99,19 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if _frozen_left > 0.0:
+		_run_wind_intensity = 0.0
 		velocity.x = 0.0
 		velocity.z = 0.0
 		_apply_land_gravity(delta)
 		move_and_slide()
 		return
 
+	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
 	var direction := _get_move_direction()
 	_apply_land_movement(delta, direction)
 	move_and_slide()
+	_update_footsteps(delta, input_dir)
+	_update_run_wind(input_dir)
 
 
 func _update_crouch(delta: float) -> void:
@@ -326,6 +334,7 @@ func _apply_land_movement(delta: float, direction: Vector3) -> void:
 	_apply_land_gravity(delta)
 	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_crouching:
 		velocity.y = jump_velocity
+		AudioManager.play_jump()
 
 
 func _apply_horizontal_movement(delta: float, direction: Vector3, target_speed: float) -> void:
@@ -400,6 +409,52 @@ func _prune_interaction_targets() -> void:
 	for i in range(_interaction_targets.size() - 1, -1, -1):
 		if not is_instance_valid(_interaction_targets[i]):
 			_interaction_targets.remove_at(i)
+
+
+func get_run_wind_intensity() -> float:
+	return _run_wind_intensity
+
+
+func _update_run_wind(input_dir: Vector2) -> void:
+	var running := (
+		Input.is_action_pressed("run")
+		and not is_crouching
+		and input_dir.length_squared() > 0.001
+		and Vector2(velocity.x, velocity.z).length() > walk_speed * 0.55
+	)
+	var target := 0.0
+	if running:
+		var speed_ratio := clampf(Vector2(velocity.x, velocity.z).length() / run_speed, 0.0, 1.0)
+		target = lerpf(0.35, 1.0, speed_ratio)
+	_run_wind_intensity = move_toward(_run_wind_intensity, target, get_physics_process_delta_time() * 3.0)
+
+
+func _update_footsteps(delta: float, input_dir: Vector2) -> void:
+	if _frozen_left > 0.0:
+		_footstep_timer = 0.0
+		_was_moving = false
+		return
+
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	var wants_move := input_dir.length_squared() > 0.001
+	var is_moving := wants_move and is_on_floor() and horizontal_speed >= 1.2
+
+	if not is_moving:
+		_footstep_timer = 0.0
+		_was_moving = false
+		return
+
+	if not _was_moving:
+		var interval := 0.38 if (Input.is_action_pressed("run") and not is_crouching) else 0.52
+		_footstep_timer = interval * 0.55
+		_was_moving = true
+		return
+
+	_footstep_timer -= delta
+	if _footstep_timer <= 0.0:
+		AudioManager.play_footstep()
+		var interval := 0.38 if (Input.is_action_pressed("run") and not is_crouching) else 0.52
+		_footstep_timer = interval
 
 
 func _get_game_manager() -> Node:
