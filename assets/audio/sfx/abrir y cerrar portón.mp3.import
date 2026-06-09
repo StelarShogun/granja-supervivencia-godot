@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cxdqqj3n5l1hj"
+path="res://.godot/imported/abrir y cerrar portón.mp3-3bb27e86ba8d2332a94db56bb8604321.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/sfx/abrir y cerrar portón.mp3"
+dest_files=["res://.godot/imported/abrir y cerrar portón.mp3-3bb27e86ba8d2332a94db56bb8604321.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -20,6 +20,7 @@ var _pending_slot: int = 0
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	get_tree().paused = false
+	AudioManager.play_menu_music()
 
 	$Layout/VBox/MainPanel/Buttons/ContinueButton.pressed.connect(_on_continue_pressed)
 	$Layout/VBox/MainPanel/Buttons/NewGameButton.pressed.connect(_on_new_game_pressed)

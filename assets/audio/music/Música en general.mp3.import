@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://jq3drjmks62e"
+path="res://.godot/imported/Música en general.mp3-9829fa8278ead3f459229ef69ce8d278.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/music/Música en general.mp3"
+dest_files=["res://.godot/imported/Música en general.mp3-9829fa8278ead3f459229ef69ce8d278.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://c4x1mt2duj2bj"
+path="res://.godot/imported/Música chicharras.mp3-595e2229fa76b0e8679e149b014cbba2.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/music/Música chicharras.mp3"
+dest_files=["res://.godot/imported/Música chicharras.mp3-595e2229fa76b0e8679e149b014cbba2.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

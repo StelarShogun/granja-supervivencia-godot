@@ -47,6 +47,10 @@ var _save_accumulator: float = 0.0
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("game_manager")
+	var ambient := preload("res://scripts/world/ambient_audio_controller.gd").new()
+	ambient.name = "AmbientAudioController"
+	ambient.player_path = player_path
+	add_child(ambient)
 	_restore_objective_message()
 	call_deferred("_boot_game")
 
@@ -129,6 +133,7 @@ func start_new_game() -> void:
 	_restore_objective_message()
 	_update_diablo_speed()
 	spawn_animals()
+	AudioManager.enter_gameplay()
 	update_ui()
 	save_current_game()
 	_spawn_request_id += 1
@@ -234,6 +239,7 @@ func update_progression(show_progress_message: bool = true) -> void:
 	if current_progress != old_progress:
 		_update_diablo_speed()
 		spawn_animals()
+		AudioManager.play_progression()
 		if show_progress_message:
 			show_message("Progresión %d activada." % current_progress, 2.4)
 
@@ -267,11 +273,12 @@ func spawn_animals() -> void:
 			scene = animal_species_scenes[index % animal_species_scenes.size()]
 		var animal := scene.instantiate()
 		animal.name = "%s_%02d" % [animal.name, index + 1]
+		var kinds := ["vaca", "gallina", "oveja", "vaca", "cabra"]
+		animal.set("animal_kind", kinds[index % kinds.size()])
+		animal.set("game_manager_path", NodePath("../../GameManager"))
 		container.add_child(animal)
 		if animal is Node3D:
 			(animal as Node3D).global_transform = marker.global_transform
-		if animal.has_method("set"):
-			animal.set("game_manager_path", NodePath("../../GameManager"))
 		_spawned_animals.append(animal)
 		_used_spawn_indices[index] = true
 
@@ -429,6 +436,7 @@ func win_game() -> void:
 	current_progress = 3
 	victory = true
 	game_over = true
+	AudioManager.stop_gameplay()
 	_restore_objective_message()
 	_update_diablo_speed()
 	update_ui()
@@ -443,6 +451,7 @@ func lose_game() -> void:
 		return
 	victory = false
 	game_over = true
+	AudioManager.stop_gameplay()
 	_restore_objective_message()
 	update_ui()
 	save_current_game()
