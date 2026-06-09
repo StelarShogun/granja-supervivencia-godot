@@ -16,6 +16,14 @@ const AUTOSAVE_INTERVAL := 300.0  # 5 minutos, sobre el slot activo
 @export var animal_container_path: NodePath = NodePath("../Animals")
 @export var diablo_cave_spawn_path: NodePath = NodePath("../SpawnPoints/Diablo_Cave_Spawn")
 @export var animal_scene: PackedScene = preload("res://scenes/animals/animal.tscn")
+## Species variants picked per spawn slot. Falls back to animal_scene if empty.
+@export var animal_species_scenes: Array[PackedScene] = [
+	preload("res://scenes/animals/animal_cow.tscn"),
+	preload("res://scenes/animals/animal_chicken.tscn"),
+	preload("res://scenes/animals/animal_sheep.tscn"),
+	preload("res://scenes/animals/animal_pig.tscn"),
+	preload("res://scenes/animals/animal_goat.tscn"),
+]
 @export var diablo_spawn_delay: float = 60.0
 @export var autosave_enabled: bool = true
 @export var diablo_timer_enabled: bool = true
@@ -253,8 +261,12 @@ func spawn_animals() -> void:
 			return
 
 		var marker := markers[index] as Marker3D
-		var animal := animal_scene.instantiate()
-		animal.name = "Animal_%02d" % (index + 1)
+		var scene := animal_scene
+		if not animal_species_scenes.is_empty():
+			# stable per-slot species so reloads repopulate consistently
+			scene = animal_species_scenes[index % animal_species_scenes.size()]
+		var animal := scene.instantiate()
+		animal.name = "%s_%02d" % [animal.name, index + 1]
 		container.add_child(animal)
 		if animal is Node3D:
 			(animal as Node3D).global_transform = marker.global_transform

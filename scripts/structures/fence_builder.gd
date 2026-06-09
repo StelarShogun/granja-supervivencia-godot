@@ -78,10 +78,15 @@ func _build() -> void:
 		var a: Vector2 = e[0]
 		var b: Vector2 = e[1]
 		if int(e[2]) == gate_side:
-			for seg in _split_gate_edge(a, b):
-				_chain_segment(seg[0], seg[1], xforms)
+			var segs := _split_gate_edge(a, b)
+			for i in segs.size():
+				var seg: Array = segs[i]
+				# extend only the corner ends; keep the gate opening exact
+				var ext_a: bool = (seg[0] as Vector2).is_equal_approx(a)
+				var ext_b: bool = (seg[1] as Vector2).is_equal_approx(b)
+				_chain_segment(seg[0], seg[1], xforms, ext_a, ext_b)
 		else:
-			_chain_segment(a, b, xforms)
+			_chain_segment(a, b, xforms, true, true)
 
 	var inv := global_transform.affine_inverse()
 
@@ -146,7 +151,15 @@ func _split_gate_edge(a: Vector2, b: Vector2) -> Array:
 
 
 ## Chains tiles between shared ground points along one straight segment.
-func _chain_segment(a: Vector2, b: Vector2, out: Array[Transform3D]) -> void:
+## ext_a/ext_b push the segment ends 0.2 m past the corners so adjacent edges
+## always physically overlap (no hairline corner gaps from float precision).
+func _chain_segment(a: Vector2, b: Vector2, out: Array[Transform3D],
+		ext_a := false, ext_b := false) -> void:
+	var pre_dir := (b - a).normalized()
+	if ext_a:
+		a -= pre_dir * 0.2
+	if ext_b:
+		b += pre_dir * 0.2
 	var length := a.distance_to(b)
 	if length < 0.001:
 		return

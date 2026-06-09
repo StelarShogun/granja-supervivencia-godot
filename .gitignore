@@ -2,3 +2,5 @@
 /addons/godot_mcp_server
 /.godot
 /addons/godot_ai
+*.blend1
+*.blend2

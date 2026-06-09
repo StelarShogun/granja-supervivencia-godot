@@ -1,0 +1,94 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/animals/animal.gd" id="1_animal_script"]
+
+[sub_resource type="StandardMaterial3D" id="M_pink"]
+albedo_color = Color(0.91, 0.62, 0.6, 1)
+roughness = 0.92
+
+[sub_resource type="StandardMaterial3D" id="M_dark"]
+albedo_color = Color(0.75, 0.45, 0.45, 1)
+roughness = 0.92
+
+[sub_resource type="BoxMesh" id="B_body"]
+size = Vector3(1.1, 0.6, 0.62)
+
+[sub_resource type="BoxMesh" id="B_0p4_0p42_0p4"]
+size = Vector3(0.4, 0.42, 0.4)
+
+[sub_resource type="BoxMesh" id="B_0p12_0p16_0p18"]
+size = Vector3(0.12, 0.16, 0.18)
+
+[sub_resource type="BoxMesh" id="B_0p12_0p14_0p06"]
+size = Vector3(0.12, 0.14, 0.06)
+
+[sub_resource type="BoxMesh" id="B_0p14_0p28_0p14"]
+size = Vector3(0.14, 0.28, 0.14)
+
+[sub_resource type="BoxMesh" id="B_0p16_0p07_0p07"]
+size = Vector3(0.16, 0.07, 0.07)
+
+[sub_resource type="BoxShape3D" id="ColBox"]
+size = Vector3(1.15, 0.95, 0.65)
+
+[node name="Animal_Pig" type="Area3D" groups=["animals"]]
+script = ExtResource("1_animal_script")
+ground_offset = 0.0
+monitoring = true
+monitorable = true
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Body" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+mesh = SubResource("B_body")
+surface_material_override/0 = SubResource("M_pink")
+
+[node name="Head" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.65, 0.62, 0)
+mesh = SubResource("B_0p4_0p42_0p4")
+surface_material_override/0 = SubResource("M_pink")
+
+[node name="Snout" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9, 0.55, 0)
+mesh = SubResource("B_0p12_0p16_0p18")
+surface_material_override/0 = SubResource("M_dark")
+
+[node name="Ear_L" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.9, 0.15)
+mesh = SubResource("B_0p12_0p14_0p06")
+surface_material_override/0 = SubResource("M_dark")
+
+[node name="Ear_R" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.9, -0.15)
+mesh = SubResource("B_0p12_0p14_0p06")
+surface_material_override/0 = SubResource("M_dark")
+
+[node name="Leg_FL" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.14, 0.2)
+mesh = SubResource("B_0p14_0p28_0p14")
+surface_material_override/0 = SubResource("M_pink")
+
+[node name="Leg_FR" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.14, -0.2)
+mesh = SubResource("B_0p14_0p28_0p14")
+surface_material_override/0 = SubResource("M_pink")
+
+[node name="Leg_BL" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0.14, 0.2)
+mesh = SubResource("B_0p14_0p28_0p14")
+surface_material_override/0 = SubResource("M_pink")
+
+[node name="Leg_BR" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0.14, -0.2)
+mesh = SubResource("B_0p14_0p28_0p14")
+surface_material_override/0 = SubResource("M_pink")
+
+[node name="Tail" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0.65, 0)
+mesh = SubResource("B_0p16_0p07_0p07")
+surface_material_override/0 = SubResource("M_dark")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.475, 0)
+shape = SubResource("ColBox")

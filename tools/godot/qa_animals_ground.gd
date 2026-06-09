@@ -28,6 +28,9 @@ func _check(main: Node, space: PhysicsDirectSpaceState3D, label: String) -> void
 	var animals := main.get_tree().get_nodes_in_group("animals")
 	var bad := 0
 	print("=== QA_ANIMALS %s: %d animals ===" % [label, animals.size()])
+	if animals.is_empty():
+		print("NO ANIMALS INSTANCED")
+		bad += 1
 	for a in animals:
 		if not (a is Node3D):
 			continue

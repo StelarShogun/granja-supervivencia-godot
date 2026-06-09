@@ -18,7 +18,15 @@ extends Node
 ## Maximum sun light energy at midday.
 @export var sun_energy: float = 1.2
 ## Maximum moon light energy at night so the night stays playable.
-@export var moon_energy: float = 0.35
+@export var moon_energy: float = 0.5
+## Ambient fill so shaded faces (fence backsides, building walls) keep their
+## material colour instead of going flat black.
+@export var ambient_energy: float = 0.7
+## Ratio of sky light feeding ambient (Sky3D sky_contribution).
+@export_range(0.0, 1.0, 0.01) var ambient_sky_contribution: float = 1.0
+## QA helper: set >= 0 to freeze the day/night cycle at this hour (e.g. 10.0
+## for screenshots). Leave at -1 for normal gameplay cycle.
+@export var qa_fixed_time: float = -1.0
 
 @export_group("Fog")
 ## Depth fog hides map edges and blends with the horizon ring. Sky3D mesh fog stays off.
@@ -57,6 +65,12 @@ func _apply_sky_config() -> void:
 	sky.game_time_enabled = true
 	sky.sun_energy = sun_energy
 	sky.moon_energy = moon_energy
+	sky.sky_contribution = ambient_sky_contribution
+	if "ambient_energy" in sky:
+		sky.ambient_energy = ambient_energy
+	if qa_fixed_time >= 0.0:
+		sky.current_time = qa_fixed_time
+		sky.game_time_enabled = false
 
 	# Disable Sky3D's screen-space fog and any generated fog mesh.
 	sky.fog_enabled = false

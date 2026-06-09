@@ -41,19 +41,17 @@ var _interaction_targets: Array[Node] = []
 var _camera_pitch: float = -15.0
 
 @onready var _interaction_area: Area3D = $InteractionArea
-@onready var _visual_mesh: MeshInstance3D = $MeshInstance3D
+@onready var _visual_mesh: Node3D = $Visual
 @onready var _camera_pivot: Node3D = $CameraPivot
 @onready var _spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 
 var _capsule_shape: CapsuleShape3D
-var _capsule_mesh: CapsuleMesh
 
 
 func _ready() -> void:
 	add_to_group("player")
 	_capsule_shape = _collision_shape.shape as CapsuleShape3D
-	_capsule_mesh = _visual_mesh.mesh as CapsuleMesh
 	_setup_camera_collision()
 	_interaction_area.area_entered.connect(_on_interaction_area_entered)
 	_interaction_area.area_exited.connect(_on_interaction_area_exited)
@@ -120,9 +118,8 @@ func _update_crouch(delta: float) -> void:
 	var height := move_toward(_capsule_shape.height, target_height, crouch_lerp_speed * delta)
 	_capsule_shape.height = height
 	_collision_shape.position.y = height * 0.5
-	if _capsule_mesh != null:
-		_capsule_mesh.height = height
-	_visual_mesh.position.y = height * 0.5
+	# squash the whole character visual when crouching (base stays on ground)
+	_visual_mesh.scale.y = height / maxf(stand_height, 0.001)
 
 	var ratio := clampf((height - crouch_height) / maxf(stand_height - crouch_height, 0.001), 0.0, 1.0)
 	_camera_pivot.position.y = lerpf(crouch_camera_y, stand_camera_y, ratio)
