@@ -2,10 +2,10 @@ extends CharacterBody3D
 
 const MAX_HEALTH := 100.0
 
-@export var walk_speed: float = 10.0
-@export var run_speed: float = 18.0
-@export var acceleration: float = 18.0
-@export var deceleration: float = 22.0
+@export var walk_speed: float = 6.0
+@export var run_speed: float = 11.0
+@export var acceleration: float = 45.0
+@export var deceleration: float = 60.0
 @export var rotation_speed: float = 10.0
 @export var mouse_sensitivity: float = 0.003
 @export var camera_min_pitch: float = -55.0
@@ -17,6 +17,7 @@ const MAX_HEALTH := 100.0
 @export var stand_height: float = 1.8
 @export var crouch_height: float = 1.0
 @export var crouch_speed_multiplier: float = 0.5
+@export var injured_speed_multiplier: float = 0.7
 @export var crouch_lerp_speed: float = 8.0
 @export var stand_camera_y: float = 1.45
 @export var crouch_camera_y: float = 0.85
@@ -33,6 +34,16 @@ var has_machete: bool = false
 
 const MACHETE_RANGE := 3.5
 const MACHETE_DAMAGE := 34.0
+const INJURED_HEALTH_THRESHOLD := 35.0
+const LOOPING_ANIMATIONS: Array[StringName] = [
+	&"Idle",
+	&"Walk",
+	&"Walk_Injured",
+	&"Run",
+	&"Run_Injured",
+	&"Crouch_Down_Walk",
+	&"Jump",
+]
 
 var _invulnerability_left: float = 0.0
 var _frozen_left: float = 0.0
@@ -42,6 +53,8 @@ var _camera_pitch: float = -15.0
 var _footstep_timer: float = 0.0
 var _run_wind_intensity: float = 0.0
 var _was_moving: bool = false
+var _animation_player: AnimationPlayer
+var _current_animation: StringName = &""
 
 @onready var _interaction_area: Area3D = $InteractionArea
 @onready var _visual_mesh: Node3D = $Visual
@@ -56,6 +69,8 @@ func _ready() -> void:
 	add_to_group("player")
 	_capsule_shape = _collision_shape.shape as CapsuleShape3D
 	_setup_camera_collision()
+	_animation_player = _find_animation_player(_visual_mesh)
+	_setup_animation_loops()
 	_interaction_area.area_entered.connect(_on_interaction_area_entered)
 	_interaction_area.area_exited.connect(_on_interaction_area_exited)
 	_interaction_area.body_entered.connect(_on_interaction_body_entered)
@@ -94,6 +109,7 @@ func _physics_process(delta: float) -> void:
 		velocity.z = 0.0
 		_apply_land_gravity(delta)
 		move_and_slide()
+		_update_animation(Vector2.ZERO)
 		return
 
 	if _frozen_left > 0.0:
@@ -102,6 +118,7 @@ func _physics_process(delta: float) -> void:
 		velocity.z = 0.0
 		_apply_land_gravity(delta)
 		move_and_slide()
+		_update_animation(Vector2.ZERO)
 		return
 
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_backward")
@@ -110,6 +127,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_update_footsteps(delta, input_dir)
 	_update_run_wind(input_dir)
+	_update_animation(input_dir)
 
 
 func _update_crouch(delta: float) -> void:
@@ -126,8 +144,6 @@ func _update_crouch(delta: float) -> void:
 	var height := move_toward(_capsule_shape.height, target_height, crouch_lerp_speed * delta)
 	_capsule_shape.height = height
 	_collision_shape.position.y = height * 0.5
-	# squash the whole character visual when crouching (base stays on ground)
-	_visual_mesh.scale.y = height / maxf(stand_height, 0.001)
 
 	var ratio := clampf((height - crouch_height) / maxf(stand_height - crouch_height, 0.001), 0.0, 1.0)
 	_camera_pivot.position.y = lerpf(crouch_camera_y, stand_camera_y, ratio)
@@ -324,6 +340,8 @@ func _apply_land_movement(delta: float, direction: Vector3) -> void:
 	if Input.is_action_pressed("run") and not is_crouching:
 		target_speed = run_speed
 	target_speed *= speed_multiplier
+	if health <= INJURED_HEALTH_THRESHOLD:
+		target_speed *= injured_speed_multiplier
 	if is_crouching:
 		target_speed *= crouch_speed_multiplier
 
@@ -452,6 +470,68 @@ func _update_footsteps(delta: float, input_dir: Vector2) -> void:
 		AudioManager.play_footstep()
 		var interval := 0.38 if (Input.is_action_pressed("run") and not is_crouching) else 0.52
 		_footstep_timer = interval
+
+
+func _find_animation_player(root: Node) -> AnimationPlayer:
+	if root == null:
+		return null
+	if root is AnimationPlayer:
+		return root
+	for child in root.get_children():
+		var found := _find_animation_player(child)
+		if found != null:
+			return found
+	return null
+
+
+func _update_animation(input_dir: Vector2) -> void:
+	if _animation_player == null:
+		return
+
+	var next_animation := _get_animation_name(input_dir)
+	if next_animation == _current_animation:
+		return
+	if not _animation_player.has_animation(next_animation):
+		return
+
+	_current_animation = next_animation
+	_animation_player.play(next_animation)
+
+
+func _setup_animation_loops() -> void:
+	if _animation_player == null:
+		return
+
+	for animation_name in LOOPING_ANIMATIONS:
+		if not _animation_player.has_animation(animation_name):
+			continue
+		var animation := _animation_player.get_animation(animation_name)
+		if animation != null:
+			animation.loop_mode = Animation.LOOP_LINEAR
+
+
+func _get_animation_name(input_dir: Vector2) -> StringName:
+	var wants_move := input_dir.length_squared() > 0.001
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	var moving := wants_move and horizontal_speed > 0.8
+	var injured := health <= INJURED_HEALTH_THRESHOLD
+	var running := Input.is_action_pressed("run") and not is_crouching and moving
+
+	if not is_on_floor():
+		return &"Jump"
+
+	if is_crouching:
+		if moving:
+			return &"Crouch_Down_Walk"
+		return &"Crouch_Down"
+
+	if running:
+		return &"Run_Injured" if injured else &"Run"
+
+	if moving:
+		return &"Walk_Injured" if injured else &"Walk"
+
+	return &"Idle"
 
 
 func _get_game_manager() -> Node:
