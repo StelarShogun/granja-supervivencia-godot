@@ -2,7 +2,7 @@
 
 [ext_resource type="Shader" uid="uid://cvd0x7lon1ur6" path="res://addons/sky_3d/shaders/SkyMaterial.gdshader" id="1_ysjpo"]
 [ext_resource type="Texture2D" uid="uid://cfqk60lpl5ljv" path="res://addons/sky_3d/assets/resources/SNoise.tres" id="2_gexqn"]
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://hbmrxp1bbn6s" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/diablo.tscn" id="3_diablo"]
 [ext_resource type="Texture2D" uid="uid://cecwdqjol0ckd" path="res://addons/sky_3d/assets/textures/noiseClouds.png" id="3_kc8j3"]
 [ext_resource type="Texture2D" uid="uid://2r8ylu6rg5dp" path="res://addons/sky_3d/assets/thirdparty/textures/moon/MoonMap.png" id="4_e5eww"]
@@ -33,6 +33,8 @@
 [ext_resource type="PackedScene" uid="uid://dtldk10kxdw8h" path="res://assets/models/environment/Terreno_Finca.glb" id="50_terreno"]
 [ext_resource type="Script" uid="uid://cpa1h5jcoh8tk" path="res://scripts/world/terrain_collision.gd" id="51_terrcol"]
 [ext_resource type="Script" uid="uid://dbs7hbk40pasc" path="res://scripts/world/glb_cleanup.gd" id="52_glbclean"]
+[ext_resource type="Script" uid="uid://dvskpssfj5o1" path="res://scripts/world/vegetation_scatter.gd" id="53_vegscatter"]
+[ext_resource type="Script" path="res://scripts/structures/wooden_bridge.gd" id="54_woodbridge"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_masl8"]
 shader = ExtResource("1_ysjpo")
@@ -87,8 +89,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.19803096, 0.19803096)
-shader_parameter/cirrus_position2 = Vector2(0.19803096, 0.19803096)
+shader_parameter/cirrus_position1 = Vector2(0.08940505, 0.08940505)
+shader_parameter/cirrus_position2 = Vector2(0.08940505, 0.08940505)
 shader_parameter/cirrus_texture = ExtResource("2_gexqn")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -98,7 +100,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(11.001941, 11.001941)
+shader_parameter/cumulus_position = Vector2(0.4469911, 0.4469911)
 shader_parameter/cumulus_texture = ExtResource("3_kc8j3")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -205,6 +207,9 @@ script = ExtResource("52_glbclean")
 
 [node name="Terreno_Finca" parent="Level" unique_id=80625294 instance=ExtResource("50_terreno")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.471107, 2.031498, 22.393354)
+
+[node name="Vegetation" type="Node3D" parent="Level" unique_id=1854098496]
+script = ExtResource("53_vegscatter")
 
 [node name="MapBounds" type="Node3D" parent="." unique_id=1314561574]
 
@@ -396,11 +401,10 @@ transform = Transform3D(-1, 0, 2.5351817e-06, 0, 1, 0, -2.5351817e-06, 0, -1, 13
 [node name="Shed" parent="Structures" unique_id=1274304688 instance=ExtResource("31_masl8")]
 transform = Transform3D(-1, 0, 2.5351817e-06, 0, 1, 0, -2.5351817e-06, 0, -1, 103, 8.35, -150)
 
+[node name="WoodenBridge" type="StaticBody3D" parent="Structures"]
+transform = Transform3D(-0.5664, 0, 0.8241, 0, 1, 0, -0.8241, 0, -0.5664, 19.65, 18.3, -14.95)
+script = ExtResource("54_woodbridge")
+
 [node name="Fence" type="Node3D" parent="Structures" unique_id=59501050]
 script = ExtResource("32_2qtp0")
 fence_glb = ExtResource("33_x2df8")
-enclosure_min = Vector2(90, -160)
-enclosure_max = Vector2(152, -100)
-gate_side = 2
-gate_center = -124.866
-gate_width = 8.0

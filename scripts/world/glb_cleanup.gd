@@ -12,6 +12,7 @@ const REMOVE_EXACT := [
 	"Lake_Water_Surface",
 	"River_Water_Surface",
 	"Borde_Alto_Norte",
+	"Bridge_Part_01",
 ]
 
 const REMOVE_PREFIXES := [
@@ -22,6 +23,7 @@ const REMOVE_PREFIXES := [
 	"Lake_",
 	"Lake_Reed",
 	"Dock_",
+	"Pasto_Alto_",
 ]
 
 

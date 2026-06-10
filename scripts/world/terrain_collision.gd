@@ -15,9 +15,11 @@ const STRUCTURE_PREFIXES := [
 	"Granero_",
 	"Corral_Fence",
 	"Corral_GatePost",
-	"Bridge_",
 	"Cave_Lip",
 ]
+## NOTE: "Bridge_" removed — the GLB Bridge_Part_01 sits sunken at the
+## gorge floor (obsolete; GlbCleanup deletes it). The walkable bridge is
+## scripts/structures/wooden_bridge.gd, which builds its own collision.
 
 const MAX_STRUCTURE_SHAPES := 128
 
