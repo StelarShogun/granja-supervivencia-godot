@@ -22,10 +22,24 @@ const FOREST_GLB := "res://assets/models/environment/pine_forest.glb"
 ## Terrain surfaces that count as "green ground".
 const GREEN_MAT_KEYWORDS := ["grass", "forest"]
 
-const GRASS_PER_M2 := 1.0 / 40.0
-const GRASS_MAX := 3800
-const GRASS_CHUNK := 64.0
-const GRASS_VIS_RANGE := 115.0
+const GRASS_PER_M2 := 1.0 / 34.0
+const GRASS_MAX := 2600
+const GRASS_CHUNK := 56.0
+const GRASS_VIS_RANGE := 85.0
+
+## Source grass.glb ships a broken basecolor+opacity ATLAS texture (opacity is
+## not in the alpha channel, so Godot cannot cutout it and the clumps render as
+## dark halves). We discard that texture and shade the clump with a flat
+## low-poly green, in line with the rest of the map. Real-world target height of
+## a clump before per-instance variation.
+const GRASS_TARGET_HEIGHT := 0.42
+const GRASS_SCALE_MIN := 0.80
+const GRASS_SCALE_MAX := 1.25
+## Slope blend: 0 = follow terrain normal exactly, 1 = always vertical.
+const GRASS_UPRIGHT_BLEND := 0.55
+## Base albedo and the two tints randomly mixed per instance to kill repetition.
+const GRASS_COLOR_A := Color(0.36, 0.52, 0.22)
+const GRASS_COLOR_B := Color(0.46, 0.62, 0.27)
 
 const FOREST_PER_M2 := 1.0 / 130.0
 const FOREST_MAX := 240
@@ -118,7 +132,7 @@ func _build() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 20260609
 
-	var grass_mesh := _merged_mesh(GRASS_GLB, 0.1)
+	var grass_mesh := _build_grass_mesh()
 	var pine_mesh := _merged_mesh(PINE_GLB, 0.1)
 	var forest_mesh := _merged_mesh(FOREST_GLB, 0.1)
 	if grass_mesh == null or pine_mesh == null or forest_mesh == null:
@@ -132,8 +146,12 @@ func _build() -> void:
 	var total_area: float = tris.cum_area[tris.cum_area.size() - 1]
 
 	# ---- grass everywhere on green ground ----
+	# Each clump is aligned to the terrain normal (softly blended toward
+	# vertical) and given a random green tint, so the field never reads as one
+	# repeated upright card.
 	var grass_count: int = mini(int(total_area * GRASS_PER_M2), GRASS_MAX)
 	var grass_xforms: Array[Transform3D] = []
+	var grass_colors: PackedColorArray = PackedColorArray()
 	var attempts := 0
 	while grass_xforms.size() < grass_count and attempts < grass_count * 3:
 		attempts += 1
@@ -142,7 +160,8 @@ func _build() -> void:
 			continue
 		if not _allowed(s.point.x, s.point.z):
 			continue
-		grass_xforms.append(_xform(s.point, rng, 1.1, 1.9))
+		grass_xforms.append(_grass_xform(s.point, s.normal, rng))
+		grass_colors.append(_grass_color(rng))
 	_stats.grass = grass_xforms.size()
 
 	# riverbank accents (raycast-snapped)
@@ -158,11 +177,13 @@ func _build() -> void:
 				continue
 			if absf(hit.position.y - bank.y) > 2.0:
 				continue
-			grass_xforms.append(_xform(hit.position, rng, 0.8, 1.3))
+			grass_xforms.append(_grass_xform(hit.position, hit.normal, rng))
+			grass_colors.append(_grass_color(rng))
 			_stats.banks += 1
 
 	_add_chunked("Grass", grass_mesh, grass_xforms, GRASS_CHUNK,
-		GRASS_VIS_RANGE, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
+		GRASS_VIS_RANGE, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+		grass_colors)
 
 	# ---- dense forest across the bridge (NW of the river) ----
 	var forest_xforms: Array[Transform3D] = []
@@ -329,25 +350,52 @@ func _xform(pos: Vector3, rng: RandomNumberGenerator,
 	return Transform3D(basis, pos)
 
 
+## Grass clump transform aligned to the terrain normal (blended toward vertical
+## so steep triangles do not lay grass flat), random spin and scale.
+func _grass_xform(pos: Vector3, normal: Vector3,
+		rng: RandomNumberGenerator) -> Transform3D:
+	var up := normal.normalized().lerp(Vector3.UP, GRASS_UPRIGHT_BLEND).normalized()
+	var yaw := rng.randf() * TAU
+	var forward := Vector3(sin(yaw), 0.0, cos(yaw))
+	var right := forward.cross(up)
+	if right.length_squared() < 0.0001:
+		right = Vector3.RIGHT
+	right = right.normalized()
+	forward = up.cross(right).normalized()
+	var basis := Basis(right, up, forward)
+	basis = basis.scaled(Vector3.ONE * rng.randf_range(GRASS_SCALE_MIN, GRASS_SCALE_MAX))
+	return Transform3D(basis, pos)
+
+
+func _grass_color(rng: RandomNumberGenerator) -> Color:
+	return GRASS_COLOR_A.lerp(GRASS_COLOR_B, rng.randf())
+
+
 ## Split transforms into world-grid chunks; one MultiMeshInstance3D per
 ## chunk with a visibility range, so distant vegetation stops rendering.
 func _add_chunked(prefix: String, mesh: ArrayMesh, xforms: Array[Transform3D],
-		chunk_size: float, vis_range: float, shadow: int) -> void:
+		chunk_size: float, vis_range: float, shadow: int,
+		colors: PackedColorArray = PackedColorArray()) -> void:
+	var use_colors := colors.size() == xforms.size() and not colors.is_empty()
 	var buckets := {}
-	for t in xforms:
+	for i in xforms.size():
+		var t: Transform3D = xforms[i]
 		var key := Vector2i(int(floor(t.origin.x / chunk_size)),
 			int(floor(t.origin.z / chunk_size)))
 		if not buckets.has(key):
 			buckets[key] = []
-		buckets[key].append(t)
+		buckets[key].append(i)
 	for key in buckets:
 		var list: Array = buckets[key]
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = use_colors
 		mm.mesh = mesh
 		mm.instance_count = list.size()
 		for i in list.size():
-			mm.set_instance_transform(i, list[i])
+			mm.set_instance_transform(i, xforms[list[i]])
+			if use_colors:
+				mm.set_instance_color(i, colors[list[i]])
 		var inst := MultiMeshInstance3D.new()
 		inst.name = "%s_%d_%d" % [prefix, key.x, key.y]
 		inst.multimesh = mm
@@ -377,6 +425,50 @@ func _add_trunk(pos: Vector3, scale: float) -> void:
 
 
 ## ---------- mesh helpers ----------
+
+## Build the grass clump mesh: merge the solid clump from grass.glb (the two
+## flat emitter planes are dropped by the min_height filter), uniformly rescale
+## it to GRASS_TARGET_HEIGHT, and replace its broken atlas material with a flat
+## low-poly green that takes its tint from the per-instance MultiMesh color.
+func _build_grass_mesh() -> ArrayMesh:
+	var packed: PackedScene = load(GRASS_GLB)
+	if packed == null:
+		return null
+	var inst := packed.instantiate()
+	var raw := ArrayMesh.new()
+	_collect_surfaces(inst, raw, 0.1)
+	inst.free()
+	if raw.get_surface_count() == 0:
+		return null
+
+	var factor := GRASS_TARGET_HEIGHT / maxf(raw.get_aabb().size.y, 0.0001)
+	var mat := _grass_material()
+	var out := ArrayMesh.new()
+	for s in raw.get_surface_count():
+		var arrays := raw.surface_get_arrays(s)
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		for i in verts.size():
+			verts[i] = verts[i] * factor
+		arrays[Mesh.ARRAY_VERTEX] = verts
+		var idx := out.get_surface_count()
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		out.surface_set_material(idx, mat)
+	return out
+
+
+## Flat low-poly grass material. Albedo is white so the MultiMesh per-instance
+## color shows through directly; no texture dependency, no transparency.
+func _grass_material() -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color.WHITE
+	m.vertex_color_use_as_albedo = true
+	m.roughness = 1.0
+	m.metallic = 0.0
+	m.metallic_specular = 0.1
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	return m
+
 
 ## Merge every solid MeshInstance3D in a GLB scene into one ArrayMesh.
 ## min_height filters out flat particle-emitter planes (grass.glb ships two).

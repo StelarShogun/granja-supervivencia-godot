@@ -2,6 +2,10 @@ extends Node
 
 const ANIMAL_GOAL := 10
 const AUTOSAVE_INTERVAL := 300.0  # 5 minutos, sobre el slot activo
+## Logs de validación del spawn del Diablo (raycast, collider, posición final).
+const DEBUG_DIABLO_SPAWN := false
+## Capa de colisión del terreno caminable (TerrainCollision).
+const WORLD_LAYER := 2
 
 @export var animals_in_corral: int = 0
 @export var current_progress: int = 1
@@ -315,7 +319,8 @@ func spawn_diablo(show_alert: bool = true) -> void:
 
 	var spawn := get_node_or_null(diablo_cave_spawn_path) as Node3D
 	if spawn != null and diablo is Node3D:
-		(diablo as Node3D).global_position = spawn.global_position
+		(diablo as Node3D).global_position = _ground_snap(
+			spawn.global_position, diablo as Node3D, 0.6, "QA-DIABLO")
 	if diablo.has_method("set_progress"):
 		diablo.set_progress(current_progress)
 	if diablo.has_method("activate"):
@@ -323,6 +328,12 @@ func spawn_diablo(show_alert: bool = true) -> void:
 	_update_diablo_safe_state()
 
 	diablo_spawned = true
+	if DEBUG_DIABLO_SPAWN and diablo is Node3D:
+		print("[QA-DIABLO] final=%v active=%s visible=%s" % [
+			(diablo as Node3D).global_position,
+			str(diablo.get("active")),
+			str((diablo as Node3D).visible),
+		])
 	if show_alert:
 		var ui := get_node_or_null(ui_path)
 		if ui != null and ui.has_method("show_center_alert"):
@@ -437,6 +448,7 @@ func win_game() -> void:
 	victory = true
 	game_over = true
 	AudioManager.stop_gameplay()
+	AudioManager.play_victory()
 	_restore_objective_message()
 	_update_diablo_speed()
 	update_ui()
@@ -452,6 +464,7 @@ func lose_game() -> void:
 	victory = false
 	game_over = true
 	AudioManager.stop_gameplay()
+	AudioManager.play_defeat()
 	_restore_objective_message()
 	update_ui()
 	save_current_game()
@@ -525,6 +538,38 @@ func _update_diablo_safe_state() -> void:
 	var diablo := get_node_or_null(diablo_path)
 	if diablo != null and diablo.has_method("set_target_safe_zone"):
 		diablo.set_target_safe_zone(player_in_safe_zone)
+
+
+## Raycast vertical contra la capa World. Devuelve la posición del marcador
+## ajustada para quedar `offset_y` por encima del suelo real. Si el rayo no
+## golpea nada, devuelve la posición original (el marcador manda).
+func _ground_snap(
+	marker_pos: Vector3,
+	context: Node3D,
+	offset_y: float = 0.6,
+	tag: String = "QA-SNAP"
+) -> Vector3:
+	var world := context.get_world_3d()
+	if world == null:
+		return marker_pos
+	var from := marker_pos + Vector3.UP * 2.0
+	var to := marker_pos + Vector3.DOWN * 120.0
+	var query := PhysicsRayQueryParameters3D.create(from, to, WORLD_LAYER)
+	var hit := world.direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		if DEBUG_DIABLO_SPAWN:
+			print("[%s] marker=%v raycast SIN hit; uso marcador" % [tag, marker_pos])
+		return marker_pos
+	var ground: Vector3 = hit["position"]
+	var collider_name := "?"
+	if hit.has("collider") and hit["collider"] != null:
+		collider_name = String((hit["collider"] as Node).name)
+	if DEBUG_DIABLO_SPAWN:
+		print("[%s] marker=%v hit=%v collider=%s final=%v" % [
+			tag, marker_pos, ground, collider_name,
+			ground + Vector3.UP * offset_y,
+		])
+	return ground + Vector3.UP * offset_y
 
 
 func _clear_animals() -> void:

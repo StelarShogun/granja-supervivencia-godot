@@ -35,6 +35,16 @@ var has_machete: bool = false
 const MACHETE_RANGE := 3.5
 const MACHETE_DAMAGE := 34.0
 const INJURED_HEALTH_THRESHOLD := 35.0
+
+## Attack timing. Damage lands in a window mid-swing, not on key press, and a
+## cooldown blocks spam.
+const MACHETE_ATTACK_TIME := 0.70
+const MACHETE_IMPACT_DELAY := 0.28
+const MACHETE_COOLDOWN := 0.85
+## RightHand bone of the Mixamo skeleton the machete is parented to.
+const MACHETE_BONE := &"mixamorig_RightHand"
+## 1 m expressed in this skeleton's bone-local units (forearm ~52 u ≈ 0.25 m).
+const BONE_UNITS_PER_M := 209.0
 const LOOPING_ANIMATIONS: Array[StringName] = [
 	&"Idle",
 	&"Walk",
@@ -55,6 +65,12 @@ var _run_wind_intensity: float = 0.0
 var _was_moving: bool = false
 var _animation_player: AnimationPlayer
 var _current_animation: StringName = &""
+var _machete_visual: Node3D
+var _attacking: bool = false
+var _attack_left: float = 0.0
+var _impact_left: float = 0.0
+var _attack_cooldown_left: float = 0.0
+var _pending_strike: bool = false
 
 @onready var _interaction_area: Area3D = $InteractionArea
 @onready var _visual_mesh: Node3D = $Visual
@@ -71,6 +87,7 @@ func _ready() -> void:
 	_setup_camera_collision()
 	_animation_player = _find_animation_player(_visual_mesh)
 	_setup_animation_loops()
+	_setup_machete()
 	_interaction_area.area_entered.connect(_on_interaction_area_entered)
 	_interaction_area.area_exited.connect(_on_interaction_area_exited)
 	_interaction_area.body_entered.connect(_on_interaction_body_entered)
@@ -171,6 +188,7 @@ func receive_damage(amount: float = -1.0) -> bool:
 	health = maxf(0.0, health - amount)
 	invulnerable = true
 	_invulnerability_left = invulnerability_time
+	AudioManager.play_player_hurt()
 
 	var manager := _get_game_manager()
 	if manager != null:
@@ -239,28 +257,109 @@ func deliver_animal() -> Node:
 
 func equip_machete() -> void:
 	has_machete = true
+	if _machete_visual != null:
+		_machete_visual.visible = true
+
+
+## Builds the in-hand machete (hidden until equipped) and parents it to the
+## RightHand bone so it follows the Attack animation.
+func _setup_machete() -> void:
+	var skeleton := _find_skeleton(_visual_mesh)
+	if skeleton == null:
+		return
+	var attach := BoneAttachment3D.new()
+	attach.name = "MacheteAttach"
+	attach.bone_name = MACHETE_BONE
+	skeleton.add_child(attach)
+	var holder := _build_machete()
+	holder.visible = false
+	attach.add_child(holder)
+	_machete_visual = holder
+
+
+func _build_machete() -> Node3D:
+	var u := BONE_UNITS_PER_M
+	var holder := Node3D.new()
+	holder.name = "Machete"
+
+	var handle_mat := StandardMaterial3D.new()
+	handle_mat.albedo_color = Color(0.18, 0.12, 0.06)
+	handle_mat.roughness = 1.0
+	var blade_mat := StandardMaterial3D.new()
+	blade_mat.albedo_color = Color(0.72, 0.74, 0.78)
+	blade_mat.metallic = 0.55
+	blade_mat.roughness = 0.35
+
+	# Blade runs along the hand's +Y (toward the fingertips).
+	var handle := MeshInstance3D.new()
+	var hb := BoxMesh.new()
+	hb.size = Vector3(0.035, 0.14, 0.035) * u
+	handle.mesh = hb
+	handle.material_override = handle_mat
+	handle.position = Vector3(0.0, 0.07, 0.0) * u
+	holder.add_child(handle)
+
+	var blade := MeshInstance3D.new()
+	var bb := BoxMesh.new()
+	bb.size = Vector3(0.05, 0.5, 0.012) * u
+	blade.mesh = bb
+	blade.material_override = blade_mat
+	blade.position = Vector3(0.0, 0.39, 0.0) * u
+	holder.add_child(blade)
+	return holder
+
+
+func _find_skeleton(root: Node) -> Skeleton3D:
+	if root == null:
+		return null
+	if root is Skeleton3D:
+		return root
+	for child in root.get_children():
+		var found := _find_skeleton(child)
+		if found != null:
+			return found
+	return null
 
 
 func _try_machete_attack() -> void:
 	if not has_machete:
 		var manager := _get_game_manager()
 		if manager != null and manager.has_method("show_message"):
-			manager.show_message("Necesitas el machete del fondo del lago.", 1.8)
+			manager.show_message("Necesitas el machete del fondo del cráter.", 1.8)
 		return
 
+	if _attacking or _attack_cooldown_left > 0.0:
+		return
+
+	_attacking = true
+	_attack_left = MACHETE_ATTACK_TIME
+	_impact_left = MACHETE_IMPACT_DELAY
+	_pending_strike = true
+	_attack_cooldown_left = MACHETE_COOLDOWN
+	AudioManager.play_machete_swing()
+	if _animation_player != null and _animation_player.has_animation(&"Attack"):
+		# Play the full swing within the attack window so it never cuts abruptly.
+		var clip := _animation_player.get_animation(&"Attack")
+		var speed := 1.0
+		if clip != null and clip.length > 0.0:
+			speed = clip.length / MACHETE_ATTACK_TIME
+		_current_animation = &"Attack"
+		_animation_player.play(&"Attack", -1.0, speed)
+
+
+## Damage resolves mid-swing (one strike per attack), only if a Diablo is in
+## range. No message on a whiff, so the HUD is never spammed.
+func _do_machete_strike() -> void:
 	var diablo := _get_nearest_diablo()
 	if diablo == null or not diablo.has_method("receive_machete_strike"):
 		return
 	if global_position.distance_to(diablo.global_position) > MACHETE_RANGE:
-		var manager2 := _get_game_manager()
-		if manager2 != null and manager2.has_method("show_message"):
-			manager2.show_message("Demasiado lejos del Diablo.", 1.2)
 		return
-
 	if diablo.receive_machete_strike(MACHETE_DAMAGE):
-		var manager3 := _get_game_manager()
-		if manager3 != null and manager3.has_method("show_message"):
-			manager3.show_message("Golpeaste al Diablo con el machete.", 1.5)
+		AudioManager.play_machete_hit()
+		var manager := _get_game_manager()
+		if manager != null and manager.has_method("show_message"):
+			manager.show_message("Golpeaste al Diablo con el machete.", 1.5)
 
 
 func _get_nearest_diablo() -> Node3D:
@@ -386,6 +485,19 @@ func _update_timers(delta: float) -> void:
 		if _mud_slow_left <= 0.0:
 			speed_multiplier = 1.0
 
+	if _attack_cooldown_left > 0.0:
+		_attack_cooldown_left -= delta
+
+	if _attacking:
+		if _pending_strike:
+			_impact_left -= delta
+			if _impact_left <= 0.0:
+				_pending_strike = false
+				_do_machete_strike()
+		_attack_left -= delta
+		if _attack_left <= 0.0:
+			_attacking = false
+
 
 func _try_interact() -> void:
 	_prune_interaction_targets()
@@ -486,6 +598,10 @@ func _find_animation_player(root: Node) -> AnimationPlayer:
 
 func _update_animation(input_dir: Vector2) -> void:
 	if _animation_player == null:
+		return
+
+	# While the Attack one-shot plays, do not let locomotion override it.
+	if _attacking:
 		return
 
 	var next_animation := _get_animation_name(input_dir)

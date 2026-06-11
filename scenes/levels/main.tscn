@@ -34,7 +34,7 @@
 [ext_resource type="Script" uid="uid://cpa1h5jcoh8tk" path="res://scripts/world/terrain_collision.gd" id="51_terrcol"]
 [ext_resource type="Script" uid="uid://dbs7hbk40pasc" path="res://scripts/world/glb_cleanup.gd" id="52_glbclean"]
 [ext_resource type="Script" uid="uid://dvskpssfj5o1" path="res://scripts/world/vegetation_scatter.gd" id="53_vegscatter"]
-[ext_resource type="Script" path="res://scripts/structures/wooden_bridge.gd" id="54_woodbridge"]
+[ext_resource type="Script" uid="uid://bk2g8p3s5r3an" path="res://scripts/structures/wooden_bridge.gd" id="54_woodbridge"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_masl8"]
 shader = ExtResource("1_ysjpo")
@@ -89,8 +89,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.08940505, 0.08940505)
-shader_parameter/cirrus_position2 = Vector2(0.08940505, 0.08940505)
+shader_parameter/cirrus_position1 = Vector2(0.45302838, 0.45302838)
+shader_parameter/cirrus_position2 = Vector2(0.45302838, 0.45302838)
 shader_parameter/cirrus_texture = ExtResource("2_gexqn")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -100,7 +100,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(0.4469911, 0.4469911)
+shader_parameter/cumulus_position = Vector2(2.2650197, 2.2650197)
 shader_parameter/cumulus_texture = ExtResource("3_kc8j3")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -401,7 +401,7 @@ transform = Transform3D(-1, 0, 2.5351817e-06, 0, 1, 0, -2.5351817e-06, 0, -1, 13
 [node name="Shed" parent="Structures" unique_id=1274304688 instance=ExtResource("31_masl8")]
 transform = Transform3D(-1, 0, 2.5351817e-06, 0, 1, 0, -2.5351817e-06, 0, -1, 103, 8.35, -150)
 
-[node name="WoodenBridge" type="StaticBody3D" parent="Structures"]
+[node name="WoodenBridge" type="StaticBody3D" parent="Structures" unique_id=1096969035]
 transform = Transform3D(-0.5664, 0, 0.8241, 0, 1, 0, -0.8241, 0, -0.5664, 19.65, 18.3, -14.95)
 script = ExtResource("54_woodbridge")
 

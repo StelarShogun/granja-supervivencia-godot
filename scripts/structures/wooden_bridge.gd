@@ -75,7 +75,7 @@ func _build() -> void:
 
 	# Side rails + posts.
 	for side in [-1.0, 1.0]:
-		var z := side * (width * 0.5 - 0.12)
+		var z: float = side * (width * 0.5 - 0.12)
 		_box(Vector3(length, 0.1, 0.12),
 			Vector3(0, rail_height, z), wood_dark, false)
 		var post_count := 5

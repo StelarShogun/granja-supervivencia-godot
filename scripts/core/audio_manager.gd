@@ -29,6 +29,15 @@ const SFX_FOOTSTEP := "res://assets/audio/sfx/pasos sobre tierra.mp3"
 const SFX_GATE     := "res://assets/audio/sfx/abrir y cerrar portón.mp3"
 const SFX_PROGRESS := "res://assets/audio/sfx/progresión.mp3"
 
+# SFX dedicados (sintetizados). Reemplazan los placeholders con pitch.
+const SFX_JUMP          := "res://assets/audio/sfx/salto.wav"
+const SFX_MACHETE_SWING := "res://assets/audio/sfx/machete_swing.wav"
+const SFX_MACHETE_HIT   := "res://assets/audio/sfx/machete_hit.wav"
+const SFX_PICKUP        := "res://assets/audio/sfx/pickup.wav"
+const SFX_HURT          := "res://assets/audio/sfx/dano.wav"
+const SFX_VICTORY       := "res://assets/audio/sfx/victoria.wav"
+const SFX_DEFEAT        := "res://assets/audio/sfx/derrota.wav"
+
 const SFX_ANIMALS := {
 	"vaca":    "res://assets/audio/sfx/vaca.mp3",
 	"gallina": "res://assets/audio/sfx/gallina.mp3",
@@ -138,9 +147,38 @@ func play_footstep() -> void:
 
 
 ## Salto: se llama una sola vez al despegar del suelo.
-## Reutiliza el archivo de pasos con pitch alto hasta disponer de salto.mp3.
 func play_jump() -> void:
-	_play_one_shot(SFX_FOOTSTEP, -10.0, randf_range(1.3, 1.5))
+	_play_one_shot(SFX_JUMP, -9.0, randf_range(0.97, 1.03))
+
+
+## Machete: swing al atacar (volumen medio).
+func play_machete_swing() -> void:
+	_play_one_shot(SFX_MACHETE_SWING, -7.0, randf_range(0.95, 1.06))
+
+
+## Machete: impacto al golpear al Diablo (claro y presente).
+func play_machete_hit() -> void:
+	_play_one_shot(SFX_MACHETE_HIT, -3.5, randf_range(0.97, 1.04))
+
+
+## Pickup de machete o Cacique.
+func play_pickup() -> void:
+	_play_one_shot(SFX_PICKUP, -5.0)
+
+
+## Daño recibido por el jugador.
+func play_player_hurt() -> void:
+	_play_one_shot(SFX_HURT, -4.0)
+
+
+## Jingle de victoria.
+func play_victory() -> void:
+	_play_one_shot(SFX_VICTORY, -3.0)
+
+
+## Jingle de derrota.
+func play_defeat() -> void:
+	_play_one_shot(SFX_DEFEAT, -3.0)
 
 
 ## Portón del corral.

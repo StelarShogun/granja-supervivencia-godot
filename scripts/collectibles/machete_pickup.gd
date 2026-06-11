@@ -19,9 +19,10 @@ func interact(player: Node) -> void:
 		return
 
 	player.equip_machete()
+	AudioManager.play_pickup()
 	var manager2 := _get_game_manager()
 	if manager2 != null and manager2.has_method("show_message"):
-		manager2.show_message("Machete del lago: única arma contra el Diablo.", 2.5)
+		manager2.show_message("Machete del cráter: única arma contra el Diablo.", 2.5)
 	queue_free()
 
 

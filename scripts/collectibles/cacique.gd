@@ -30,6 +30,7 @@ func _try_consume(player: Node) -> void:
 		return
 
 	player.heal(heal_amount)
+	AudioManager.play_pickup()
 	var manager2 := _get_game_manager()
 	if manager2 != null and manager2.has_method("show_message"):
 		manager2.show_message("Cacique: +%.0f vida." % heal_amount, 1.8)
