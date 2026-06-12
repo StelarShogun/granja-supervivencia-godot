@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://d3nvujapxb5g1"]
+
+[ext_resource type="Script" uid="uid://dpaf42bthyi0d" path="res://scripts/animals/animal.gd" id="1_pnwgp"]
+[ext_resource type="PackedScene" uid="uid://b5wuqmanbq6rt" path="res://assets/models/animals/horse.glb" id="2_pnwgp"]
+
+[sub_resource type="BoxShape3D" id="ColBox"]
+size = Vector3(2.1048095, 1.300293, 0.9)
+
+[node name="Animal_Horse" type="Area3D" unique_id=550954368 groups=["animals"]]
+script = ExtResource("1_pnwgp")
+front_yaw_offset_degrees = -90.0
+
+[node name="Visual" type="Node3D" parent="." unique_id=1577638948]
+transform = Transform3D(-1.3113417e-08, 0, 0.3, 0, 0.3, 0, -0.3, 0, -1.3113417e-08, 0.20093179, 0, 0)
+
+[node name="horse" parent="Visual" unique_id=13222379 instance=ExtResource("2_pnwgp")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=826196037]
+transform = Transform3D(1.3714427, 0, 0, 0, 1.3865507, 0, 0, 0, 1, 0.34615868, 0.88845193, 0)
+shape = SubResource("ColBox")

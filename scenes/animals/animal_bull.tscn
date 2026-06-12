@@ -1,19 +1,19 @@
-[gd_scene format=3 uid="uid://dbxs8pse8j1qa"]
+[gd_scene format=3 uid="uid://jhf118cx22j6"]
 
-[ext_resource type="Script" uid="uid://dpaf42bthyi0d" path="res://scripts/animals/animal.gd" id="1_animal_script"]
-[ext_resource type="PackedScene" uid="uid://dyoqv08ypar2a" path="res://assets/models/animals/cow.glb" id="2_7w6fx"]
+[ext_resource type="Script" uid="uid://dpaf42bthyi0d" path="res://scripts/animals/animal.gd" id="1_12jdt"]
+[ext_resource type="PackedScene" uid="uid://clyjck0mk1w6x" path="res://assets/models/animals/bull.glb" id="2_12jdt"]
 
 [sub_resource type="BoxShape3D" id="ColBox"]
 size = Vector3(2.1048095, 1.300293, 0.9)
 
-[node name="Animal_Cow" type="Area3D" unique_id=550954368 groups=["animals"]]
-script = ExtResource("1_animal_script")
+[node name="Animal_Bull" type="Area3D" unique_id=550954368 groups=["animals"]]
+script = ExtResource("1_12jdt")
 front_yaw_offset_degrees = -90.0
 
 [node name="Visual" type="Node3D" parent="." unique_id=1577638948]
 transform = Transform3D(-1.5298985e-08, 0, 0.35, 0, 0.35, 0, -0.35, 0, -1.5298985e-08, 0, 0, 0)
 
-[node name="cow" parent="Visual" unique_id=1569069726 instance=ExtResource("2_7w6fx")]
+[node name="bull" parent="Visual" unique_id=1458108731 instance=ExtResource("2_12jdt")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=826196037]
 transform = Transform3D(1.3714427, 0, 0, 0, 1.3865507, 0, 0, 0, 1, 0.34615868, 0.88845193, 0)

@@ -27,6 +27,8 @@ const WORLD_LAYER := 2
 	preload("res://scenes/animals/animal_sheep.tscn"),
 	preload("res://scenes/animals/animal_pig.tscn"),
 	preload("res://scenes/animals/animal_goat.tscn"),
+	preload("res://scenes/animals/animal_bull.tscn"),
+	preload("res://scenes/animals/animal_horse.tscn"),
 ]
 @export var diablo_spawn_delay: float = 60.0
 @export var autosave_enabled: bool = true
@@ -277,8 +279,6 @@ func spawn_animals() -> void:
 			scene = animal_species_scenes[index % animal_species_scenes.size()]
 		var animal := scene.instantiate()
 		animal.name = "%s_%02d" % [animal.name, index + 1]
-		var kinds := ["vaca", "gallina", "oveja", "vaca", "cabra"]
-		animal.set("animal_kind", kinds[index % kinds.size()])
 		animal.set("game_manager_path", NodePath("../../GameManager"))
 		container.add_child(animal)
 		if animal is Node3D:

@@ -43,6 +43,9 @@ const SFX_ANIMALS := {
 	"gallina": "res://assets/audio/sfx/gallina.mp3",
 	"oveja":   "res://assets/audio/sfx/oveja.mp3",
 	"cabra":   "res://assets/audio/sfx/cabra.mp3",
+	"toro":    "res://assets/audio/sfx/toro.wav",
+	"cerdo":   "res://assets/audio/sfx/cerdo.wav",
+	"caballo": "res://assets/audio/sfx/caballo.wav",
 }
 
 # ── capas de ambiente ─────────────────────────
