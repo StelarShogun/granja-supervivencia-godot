@@ -89,8 +89,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.45302838, 0.45302838)
-shader_parameter/cirrus_position2 = Vector2(0.45302838, 0.45302838)
+shader_parameter/cirrus_position1 = Vector2(0.048836984, 0.048836984)
+shader_parameter/cirrus_position2 = Vector2(0.048836984, 0.048836984)
 shader_parameter/cirrus_texture = ExtResource("2_gexqn")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -100,7 +100,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(2.2650197, 2.2650197)
+shader_parameter/cumulus_position = Vector2(0.2441905, 0.2441905)
 shader_parameter/cumulus_texture = ExtResource("3_kc8j3")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -206,7 +206,7 @@ script = ExtResource("51_terrcol")
 script = ExtResource("52_glbclean")
 
 [node name="Terreno_Finca" parent="Level" unique_id=80625294 instance=ExtResource("50_terreno")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.471107, 2.031498, 22.393354)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.744736, 2.031498, 22.404814)
 
 [node name="Vegetation" type="Node3D" parent="Level" unique_id=1854098496]
 script = ExtResource("53_vegscatter")
