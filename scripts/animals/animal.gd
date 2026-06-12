@@ -13,6 +13,58 @@ const GROUND_OFFSETS := {
 }
 const GROUND_MASK := 2          ## terrain + structures collision layer
 const SNAP_LERP_SPEED := 8.0    ## smooth ground-follow while wandering
+const LOOPING_ANIMATION_BASENAMES: Array[StringName] = [
+	&"Idle",
+	&"Idle_2",
+	&"Idle_Headlow",
+	&"Eating",
+	&"Walk",
+	&"WalkSlow",
+	&"Run",
+	&"Gallop",
+]
+const ANIMATION_BY_MODEL := {
+	"pig": {
+		"idle": [&"Idle"],
+		"walk": [&"WalkSlow", &"Walk"],
+		"fast": [&"Run", &"Walk"],
+	},
+	"sheep": {
+		"idle": [&"Idle"],
+		"walk": [&"WalkSlow", &"Walk"],
+		"fast": [&"Run", &"Walk"],
+	},
+	"horse": {
+		"idle": [&"Idle"],
+		"walk": [&"WalkSlow", &"Walk"],
+		"fast": [&"Run", &"Walk"],
+	},
+	"bull": {
+		"idle": [&"Idle", &"Idle_2", &"Idle_Headlow"],
+		"walk": [&"Walk"],
+		"fast": [&"Gallop", &"Walk"],
+	},
+	"cow": {
+		"idle": [&"Idle", &"Idle_2", &"Idle_Headlow"],
+		"walk": [&"Walk"],
+		"fast": [&"Gallop", &"Walk"],
+	},
+	"chicken": {
+		"idle": [&"Idle"],
+		"walk": [&"Walk"],
+		"fast": [&"Walk"],
+	},
+	"goat": {
+		"idle": [&"Idle"],
+		"walk": [&"Walk"],
+		"fast": [&"Run", &"Walk"],
+	},
+	"generic": {
+		"idle": [&"Idle", &"Idle_2", &"Idle_Headlow"],
+		"walk": [&"WalkSlow", &"Walk"],
+		"fast": [&"Gallop", &"Run", &"Walk"],
+	},
+}
 
 @export var game_manager_path: NodePath = NodePath("../../GameManager")
 @export var animal_kind: String = "vaca"
@@ -23,6 +75,9 @@ const SNAP_LERP_SPEED := 8.0    ## smooth ground-follow while wandering
 @export var wander_radius: float = 120.0
 @export var wander_interval_min: float = 3.0
 @export var wander_interval_max: float = 7.0
+@export var turn_speed: float = 6.0
+@export var front_yaw_offset_degrees: float = 0.0
+@export var follow_stop_distance: float = 0.35
 ## Extra height above the ground hit point; overridden by GROUND_OFFSETS
 ## when the node name contains a known species.
 @export var ground_offset: float = 0.0
@@ -37,6 +92,9 @@ var _following: bool = false
 var _follow_target: Node3D = null
 var _voice: AudioStreamPlayer3D
 var _cached_player: Node3D = null
+var _animation_player: AnimationPlayer
+var _current_animation: StringName = &""
+var _model_key: StringName = &"generic"
 
 
 func _ready() -> void:
@@ -46,7 +104,11 @@ func _ready() -> void:
 	_wander_timer = randf_range(wander_interval_min, wander_interval_max)
 	_bleat_timer = randf_range(5.0, 8.0)
 	_resolve_animal_kind()
+	_model_key = _resolve_model_key()
 	_setup_voice()
+	_animation_player = _find_animation_player(self)
+	_setup_animation_loops()
+	_update_animation(&"idle")
 	_cached_player = get_tree().get_first_node_in_group("player") as Node3D
 	var lower := name.to_lower()
 	for species in GROUND_OFFSETS:
@@ -86,8 +148,20 @@ func _process(delta: float) -> void:
 		return
 
 	if _following and _follow_target != null:
-		var target_pos := _follow_target.global_position + Vector3(1.2, 0.6, 0.0)
-		global_position = global_position.lerp(target_pos, 12.0 * delta)
+		var target_pos := _follow_target.global_position + Vector3(1.2, 0.0, 0.0)
+		var follow_diff := target_pos - global_position
+		follow_diff.y = 0.0
+		if follow_diff.length() > follow_stop_distance:
+			_face_direction(follow_diff, delta)
+			var previous_position := global_position
+			global_position = global_position.lerp(target_pos, 12.0 * delta)
+			var moved_distance := Vector2(
+				global_position.x - previous_position.x,
+				global_position.z - previous_position.z
+			).length()
+			_update_animation(&"fast" if moved_distance > 0.01 else &"idle")
+		else:
+			_update_animation(&"idle")
 		return
 
 	if not _has_start:
@@ -102,8 +176,12 @@ func _process(delta: float) -> void:
 	var diff := _wander_target - global_position
 	diff.y = 0.0
 	if diff.length() > 1.0:
+		_face_direction(diff, delta)
 		var step := diff.normalized() * wander_speed * delta
 		global_position += Vector3(step.x, 0.0, step.z)
+		_update_animation(&"walk")
+	else:
+		_update_animation(&"idle")
 
 	# follow the terrain while wandering (the old code kept Y frozen, which
 	# left animals hovering or buried after walking across slopes)
@@ -126,6 +204,12 @@ func _resolve_animal_kind() -> void:
 		animal_kind = "oveja"
 	elif lower.contains("goat") or lower.contains("cabra"):
 		animal_kind = "cabra"
+	elif lower.contains("bull") or lower.contains("toro"):
+		animal_kind = "toro"
+	elif lower.contains("pig") or lower.contains("cerdo"):
+		animal_kind = "cerdo"
+	elif lower.contains("horse") or lower.contains("caballo"):
+		animal_kind = "caballo"
 	elif lower.contains("cow") or lower.contains("vaca"):
 		animal_kind = "vaca"
 
@@ -232,6 +316,106 @@ func _try_pickup(player: Node) -> void:
 			_follow_target = player as Node3D
 			set_deferred("monitoring", false)
 			_bleat_spatial(0.5)
+
+
+func _find_animation_player(root: Node) -> AnimationPlayer:
+	if root == null:
+		return null
+	if root is AnimationPlayer:
+		return root
+	for child in root.get_children():
+		var found := _find_animation_player(child)
+		if found != null:
+			return found
+	return null
+
+
+func _setup_animation_loops() -> void:
+	if _animation_player == null:
+		return
+
+	for animation_name_text in _animation_player.get_animation_list():
+		var animation_name := StringName(animation_name_text)
+		var animation := _animation_player.get_animation(animation_name)
+		if animation != null:
+			var basename := _animation_basename(animation_name)
+			animation.loop_mode = (
+				Animation.LOOP_LINEAR
+				if LOOPING_ANIMATION_BASENAMES.has(basename)
+				else Animation.LOOP_NONE
+			)
+
+
+func _update_animation(state: StringName) -> void:
+	if _animation_player == null:
+		return
+
+	var next_animation := _get_animation_for_state(state)
+	if next_animation == &"" or next_animation == _current_animation:
+		return
+
+	_current_animation = next_animation
+	_animation_player.play(next_animation)
+
+
+func _get_animation_for_state(state: StringName) -> StringName:
+	var model_key := String(_model_key)
+	var model_map: Dictionary = ANIMATION_BY_MODEL.get(model_key, ANIMATION_BY_MODEL["generic"])
+	var state_key := String(state)
+	if not model_map.has(state_key):
+		state_key = "idle"
+	return _first_available_animation(model_map[state_key])
+
+
+func _first_available_animation(names: Array) -> StringName:
+	var animation_list := _animation_player.get_animation_list()
+	for wanted_name in names:
+		var wanted_basename := StringName(wanted_name)
+		for animation_name_text in animation_list:
+			var animation_name := StringName(animation_name_text)
+			if animation_name == wanted_basename or _animation_basename(animation_name) == wanted_basename:
+				return animation_name
+	return &""
+
+
+func _animation_basename(animation_name: StringName) -> StringName:
+	var text := String(animation_name)
+	var separator := text.rfind("|")
+	if separator >= 0:
+		text = text.substr(separator + 1)
+	return StringName(text)
+
+
+func _resolve_model_key() -> StringName:
+	var search_text := "%s %s %s" % [name, animal_kind, _animation_source_text()]
+	var lower := search_text.to_lower()
+	for model_key in ANIMATION_BY_MODEL.keys():
+		if model_key == "generic":
+			continue
+		if lower.contains(model_key):
+			return StringName(model_key)
+	return &"generic"
+
+
+func _animation_source_text() -> String:
+	if _animation_player == null:
+		return ""
+	var cursor: Node = _animation_player
+	var names: Array[String] = []
+	while cursor != null:
+		names.append(cursor.name)
+		cursor = cursor.get_parent()
+	return " ".join(names)
+
+
+func _face_direction(direction: Vector3, delta: float) -> void:
+	direction.y = 0.0
+	if direction.length_squared() < 0.001:
+		return
+
+	var yaw_offset := deg_to_rad(front_yaw_offset_degrees)
+	var target_yaw := atan2(direction.x, direction.z) + yaw_offset
+	rotation.y = lerp_angle(rotation.y, target_yaw, turn_speed * delta)
 
 
 func _get_game_manager() -> Node:

@@ -1,95 +1,48 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dj5wfrhyopcj2"]
 
-[ext_resource type="Script" path="res://scripts/animals/animal.gd" id="1_animal_script"]
-
-[sub_resource type="StandardMaterial3D" id="M_feather"]
-albedo_color = Color(0.92, 0.88, 0.78, 1)
-roughness = 0.92
-
-[sub_resource type="StandardMaterial3D" id="M_red"]
-albedo_color = Color(0.85, 0.15, 0.1, 1)
-roughness = 0.92
-
-[sub_resource type="StandardMaterial3D" id="M_beak"]
-albedo_color = Color(0.95, 0.6, 0.15, 1)
-roughness = 0.92
-
-[sub_resource type="StandardMaterial3D" id="M_leg"]
-albedo_color = Color(0.9, 0.7, 0.3, 1)
-roughness = 0.92
-
-[sub_resource type="BoxMesh" id="B_body"]
-size = Vector3(0.42, 0.34, 0.3)
-
-[sub_resource type="BoxMesh" id="B_0p2_0p2_0p18"]
-size = Vector3(0.2, 0.2, 0.18)
-
-[sub_resource type="BoxMesh" id="B_0p1_0p1_0p05"]
-size = Vector3(0.1, 0.1, 0.05)
-
-[sub_resource type="BoxMesh" id="B_0p12_0p06_0p06"]
-size = Vector3(0.12, 0.06, 0.06)
-
-[sub_resource type="BoxMesh" id="B_0p05_0p08_0p04"]
-size = Vector3(0.05, 0.08, 0.04)
-
-[sub_resource type="BoxMesh" id="B_0p05_0p16_0p05"]
-size = Vector3(0.05, 0.16, 0.05)
-
-[sub_resource type="BoxMesh" id="B_0p18_0p2_0p06"]
-size = Vector3(0.18, 0.2, 0.06)
+[ext_resource type="Script" uid="uid://dpaf42bthyi0d" path="res://scripts/animals/animal.gd" id="1_animal_script"]
+[ext_resource type="PackedScene" uid="uid://bkr7y160nu75l" path="res://assets/models/animals/chicken.glb" id="2_rn8rj"]
 
 [sub_resource type="BoxShape3D" id="ColBox"]
 size = Vector3(0.45, 0.6, 0.32)
 
-[node name="Animal_Chicken" type="Area3D" groups=["animals"]]
+[node name="Animal_Chicken" type="Area3D" unique_id=1940553285 groups=["animals"]]
 script = ExtResource("1_animal_script")
-ground_offset = 0.0
-monitoring = true
-monitorable = true
+front_yaw_offset_degrees = -90.0
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=1841151493]
 
-[node name="Body" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
-mesh = SubResource("B_body")
-surface_material_override/0 = SubResource("M_feather")
+[node name="chicken" parent="Visual" unique_id=21724379 instance=ExtResource("2_rn8rj")]
+transform = Transform3D(-3.059797e-10, 0, 0.007, 0, 0.007, 0, -0.007, 0, -3.059797e-10, 0, 0.2597022, 0)
 
-[node name="Head" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.55, 0)
-mesh = SubResource("B_0p2_0p2_0p18")
-surface_material_override/0 = SubResource("M_feather")
+[node name="Skeleton3D" parent="Visual/chicken/rig" parent_id_path=PackedInt32Array(21724379, 1064152571) index="0" unique_id=1021354655]
+bones/0/rotation = Quaternion(0.98714054, 0.010813149, 0.01081322, -0.15912169)
+bones/1/rotation = Quaternion(0.8615773, 0.049031265, -0.04782951, 0.5029839)
+bones/2/position = Vector3(7.670989e-07, 9.787952, -1.2867976e-06)
+bones/2/rotation = Quaternion(-0.096891806, -0.040594697, -0.063828744, 0.99241626)
+bones/3/rotation = Quaternion(-0.28271714, 0.00839838, 0.15302192, 0.9468817)
+bones/4/rotation = Quaternion(-0.024452109, 0.0029426909, 0.0003565057, 0.9996967)
+bones/5/rotation = Quaternion(-0.046115354, -0.0014675386, 0.0007501319, 0.99893475)
+bones/6/rotation = Quaternion(0.030442882, -3.237889e-06, -1.0477822e-06, 0.9995365)
+bones/7/rotation = Quaternion(0.032152396, -6.042472e-05, -0.00023021422, 0.99948305)
+bones/8/rotation = Quaternion(0.86490667, -0.0044357125, -0.027599614, 0.50115377)
+bones/9/position = Vector3(5.364421e-07, 9.0159235, -7.5791036e-06)
+bones/9/rotation = Quaternion(-0.009855327, -0.00025641487, -0.00020183706, 0.99995136)
+bones/10/rotation = Quaternion(0.027982783, 0.012276803, -0.01754433, 0.9993791)
+bones/11/rotation = Quaternion(0.38620627, 0.042444523, -0.041643724, 0.920494)
+bones/12/position = Vector3(-5.571561e-07, 5.116016, 9.793956e-06)
+bones/12/rotation = Quaternion(-0.29306534, -0.049701598, 0.12075043, 0.94713354)
+bones/13/rotation = Quaternion(-0.0504206, -0.5750601, 0.80300474, 0.14814547)
+bones/14/rotation = Quaternion(-0.06814416, 0.9650516, -0.12349113, -0.22086589)
+bones/15/rotation = Quaternion(-0.13673446, 0.14544779, -0.15269189, 0.9679018)
+bones/16/rotation = Quaternion(-0.53077984, -0.38637355, -0.31263304, 0.68647575)
+bones/17/rotation = Quaternion(-0.06486897, -0.5662402, 0.792522, -0.21696302)
+bones/18/rotation = Quaternion(0.17341001, 0.93302387, -0.14461842, 0.28014472)
+bones/19/rotation = Quaternion(-0.16385084, -0.14399438, 0.17029066, 0.96094733)
+bones/20/rotation = Quaternion(-0.4955234, 0.4028626, 0.29342845, 0.71137756)
 
-[node name="Comb" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.69, 0)
-mesh = SubResource("B_0p1_0p1_0p05")
-surface_material_override/0 = SubResource("M_red")
-
-[node name="Beak" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36, 0.55, 0)
-mesh = SubResource("B_0p12_0p06_0p06")
-surface_material_override/0 = SubResource("M_beak")
-
-[node name="Wattle" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.46, 0)
-mesh = SubResource("B_0p05_0p08_0p04")
-surface_material_override/0 = SubResource("M_red")
-
-[node name="Leg_L" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0.08)
-mesh = SubResource("B_0p05_0p16_0p05")
-surface_material_override/0 = SubResource("M_leg")
-
-[node name="Leg_R" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, -0.08)
-mesh = SubResource("B_0p05_0p16_0p05")
-surface_material_override/0 = SubResource("M_leg")
-
-[node name="Tail" type="MeshInstance3D" parent="Visual"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0.45, 0)
-mesh = SubResource("B_0p18_0p2_0p06")
-surface_material_override/0 = SubResource("M_feather")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=808795881]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 shape = SubResource("ColBox")
+
+[editable path="Visual/chicken"]
