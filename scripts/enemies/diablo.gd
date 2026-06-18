@@ -11,6 +11,7 @@ extends CharacterBody3D
 
 @export var contact_cooldown: float = 0.8
 @export var jump_velocity: float = 11.0
+@export var run_animation_speed_threshold: float = 6.0
 ## Minimum height difference above Diablo before he jumps
 @export var jump_threshold: float = 1.8
 
@@ -34,8 +35,15 @@ var _cooldown_left: float = 0.0
 var _freeze_cooldown_left: float = 0.0
 var _daylight_hidden: bool = false
 var _health: float = 100.0
+var _animation_player: AnimationPlayer
+var _current_animation: StringName = &""
+var _action_locked: bool = false
+var _dying: bool = false
+var _reset_after_attack: bool = false
 
 const DIABLO_MAX_HEALTH := 100.0
+const LOOPING_ANIMATIONS: Array[StringName] = [&"Idle", &"Walk", &"Run"]
+const ATTACK_ANIMATIONS: Array[StringName] = [&"Attack", &"Attack_2", &"Attack_3"]
 
 @onready var _hit_box: Area3D = $HitBox
 
@@ -44,6 +52,8 @@ func _ready() -> void:
 	add_to_group("enemies")
 	add_to_group("diablo")
 	chase_speed = speed_normal.x
+	_animation_player = _find_animation_player($Visual)
+	_setup_animation_player()
 	_hit_box.body_entered.connect(_on_hit_box_body_entered)
 	deactivate()
 
@@ -56,11 +66,18 @@ func _physics_process(delta: float) -> void:
 		_cooldown_left -= delta
 	if _freeze_cooldown_left > 0.0:
 		_freeze_cooldown_left -= delta
+	if _action_locked:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_apply_gravity(delta)
+		move_and_slide()
+		return
 
 	var manager := _get_game_manager()
 	if manager != null and bool(manager.get("game_over")):
 		velocity.x = 0.0
 		velocity.z = 0.0
+		_play_idle_animation()
 		_apply_gravity(delta)
 		move_and_slide()
 		return
@@ -68,6 +85,7 @@ func _physics_process(delta: float) -> void:
 	if manager != null and _is_player_safe(manager):
 		velocity.x = 0.0
 		velocity.z = 0.0
+		_play_idle_animation()
 		_apply_gravity(delta)
 		move_and_slide()
 		return
@@ -84,6 +102,7 @@ func _physics_process(delta: float) -> void:
 		if not night:
 			velocity.x = 0.0
 			velocity.z = 0.0
+			_play_idle_animation()
 			_apply_gravity(delta)
 			move_and_slide()
 			return
@@ -93,6 +112,7 @@ func _physics_process(delta: float) -> void:
 
 	var player := _get_player()
 	if player == null:
+		_play_idle_animation()
 		_apply_gravity(delta)
 		move_and_slide()
 		return
@@ -120,9 +140,11 @@ func _physics_process(delta: float) -> void:
 		velocity.x = direction.x * chase_speed
 		velocity.z = direction.z * chase_speed
 		look_at(global_position + direction, Vector3.UP)
+		_play_locomotion_animation()
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
+		_play_idle_animation()
 
 	# Jump to reach elevated player or climb terrain
 	var height_diff := player.global_position.y - global_position.y
@@ -153,6 +175,7 @@ func set_target_safe_zone(value: bool) -> void:
 	if value:
 		velocity.x = 0.0
 		velocity.z = 0.0
+		_play_idle_animation()
 
 
 func reset_position() -> void:
@@ -168,6 +191,9 @@ func reset_to_spawn() -> void:
 
 func activate() -> void:
 	active = true
+	_dying = false
+	_action_locked = false
+	_reset_after_attack = false
 	reset_health()
 	set_physics_process(true)
 	if _hit_box != null:
@@ -179,13 +205,18 @@ func activate() -> void:
 	else:
 		_daylight_hidden = false
 		show()
+		_play_action_animation(&"Roaring")
 
 
 func deactivate() -> void:
 	active = false
+	_dying = false
+	_action_locked = false
+	_reset_after_attack = false
 	_daylight_hidden = false
 	hide()
 	velocity = Vector3.ZERO
+	_stop_all_animation()
 	set_physics_process(false)
 	if _hit_box != null:
 		_hit_box.monitoring = false
@@ -198,7 +229,7 @@ func receive_machete_strike(amount: float) -> bool:
 	_health = maxf(0.0, _health - amount)
 	var manager := _get_game_manager()
 	if _health <= 0.0:
-		deactivate()
+		_begin_dying()
 		if manager != null and manager.has_method("show_message"):
 			manager.show_message("El Diablo cayó derrotado por el machete.", 3.0)
 		return true
@@ -236,7 +267,124 @@ func _on_hit_box_body_entered(body: Node3D) -> void:
 		_cooldown_left = cd
 		if manager != null and manager.has_method("show_message"):
 			manager.show_message("El Diablo te alcanzó.", 1.7)
+		_reset_after_attack = true
+		var attack := ATTACK_ANIMATIONS[randi_range(0, ATTACK_ANIMATIONS.size() - 1)]
+		if not _play_action_animation(attack):
+			_reset_after_attack = false
+			reset_position()
+
+
+func _setup_animation_player() -> void:
+	if _animation_player == null:
+		return
+	for animation_name_text in _animation_player.get_animation_list():
+		var animation_name := StringName(animation_name_text)
+		var animation := _animation_player.get_animation(animation_name)
+		if animation == null:
+			continue
+		animation.loop_mode = (
+			Animation.LOOP_LINEAR
+			if LOOPING_ANIMATIONS.has(_animation_basename(animation_name))
+			else Animation.LOOP_NONE
+		)
+	_animation_player.animation_finished.connect(_on_animation_finished)
+
+
+func _play_locomotion_animation() -> void:
+	var animation_name := &"Run" if chase_speed >= run_animation_speed_threshold else &"Walk"
+	_play_animation(animation_name, false)
+
+
+func _play_action_animation(animation_name: StringName) -> bool:
+	return _play_animation(animation_name, true)
+
+
+func _play_animation(animation_name: StringName, lock_action: bool) -> bool:
+	if _animation_player == null:
+		return false
+	var resolved := _resolve_animation(animation_name)
+	if resolved == &"":
+		return false
+	_action_locked = lock_action
+	if resolved == _current_animation and _animation_player.is_playing():
+		return true
+	_current_animation = resolved
+	_animation_player.play(resolved, 0.15)
+	return true
+
+
+func _play_idle_animation() -> void:
+	if _action_locked or _dying:
+		return
+	_play_animation(&"Idle", false)
+
+
+func _stop_all_animation() -> void:
+	if _animation_player != null:
+		_animation_player.stop()
+	_current_animation = &""
+
+
+func _begin_dying() -> void:
+	active = false
+	_dying = true
+	_action_locked = true
+	_reset_after_attack = false
+	velocity = Vector3.ZERO
+	set_physics_process(false)
+	if _hit_box != null:
+		_hit_box.monitoring = false
+		_hit_box.monitorable = false
+	if not _play_action_animation(&"Dying"):
+		_dying = false
+		hide()
+
+
+func _on_animation_finished(animation_name: StringName) -> void:
+	var basename := _animation_basename(animation_name)
+	if basename == &"Dying" and _dying:
+		_dying = false
+		_action_locked = false
+		_current_animation = &""
+		hide()
+		return
+	if ATTACK_ANIMATIONS.has(basename) and _reset_after_attack:
+		_reset_after_attack = false
+		_action_locked = false
+		_current_animation = &""
 		reset_position()
+		return
+	if basename == &"Roaring":
+		_action_locked = false
+		_current_animation = &""
+
+
+func _resolve_animation(wanted: StringName) -> StringName:
+	if _animation_player == null:
+		return &""
+	for animation_name_text in _animation_player.get_animation_list():
+		var animation_name := StringName(animation_name_text)
+		if animation_name == wanted or _animation_basename(animation_name) == wanted:
+			return animation_name
+	return &""
+
+
+func _animation_basename(animation_name: StringName) -> StringName:
+	var text := String(animation_name)
+	var separator := text.rfind("|")
+	if separator >= 0:
+		text = text.substr(separator + 1)
+	return StringName(text)
+
+
+func _find_animation_player(root: Node) -> AnimationPlayer:
+	if root is AnimationPlayer:
+		return root
+	for child in root.get_children():
+		var found := _find_animation_player(child)
+		if found != null:
+			return found
+	return null
 
 
 func _is_night() -> bool:
