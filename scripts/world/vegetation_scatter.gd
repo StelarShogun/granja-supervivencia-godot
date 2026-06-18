@@ -7,17 +7,16 @@ extends Node3D
 ##   instances are sampled directly on the Terrain_Main triangles whose
 ##   material is grass/forest ground, so river bed (MAT_Wet), paths
 ##   (MAT_Path), rock and mud are excluded automatically.
-## - A dense pine forest (pine_forest.glb, light LOD of SJ-Frosted Pine
-##   Tree) fills the whole region across the river bridge (NW half-plane).
-## - Accent pines (pine_low.glb, high LOD) dress map borders and the
-##   mountain fringe.
+## - A dense pine forest fills the whole region across the river bridge
+##   (NW half-plane), using pine.glb and pine2.glb as visual variants.
+## - Accent pines dress map borders and the mountain fringe.
 ## - EVERY pine gets a simple trunk collision cylinder on layer 2 (same
 ##   proxy style terrain_collision.gd uses for Lib_Tree).
 ## Chunked MultiMeshes + visibility ranges keep the FPS stable.
 
 const GRASS_GLB := "res://assets/models/environment/grass.glb"
-const PINE_GLB := "res://assets/models/environment/pine_low.glb"
-const FOREST_GLB := "res://assets/models/environment/pine_forest.glb"
+const PINE_GLB := "res://assets/models/environment/pine.glb"
+const PINE2_GLB := "res://assets/models/environment/pine2.glb"
 
 ## Terrain surfaces that count as "green ground".
 const GREEN_MAT_KEYWORDS := ["grass", "forest"]
@@ -46,6 +45,11 @@ const FOREST_MAX := 240
 const FOREST_MIN_SPACING := 12.0
 const FOREST_CHUNK := 96.0
 const FOREST_VIS_RANGE := 260.0
+## Both new GLBs have valid base-centered mesh geometry, but different source
+## heights. Normalize their visible height before per-instance variation.
+const PINE_TARGET_HEIGHT := 11.5
+const PINE_GROUND_TOLERANCE := 1.25
+const PINE_GROUND_EMBED := 0.08
 
 ## River line (world XZ). Forest side = cross((p - P1), V) < 0, which is
 ## the area you reach after crossing the bridge from the farm side.
@@ -133,11 +137,13 @@ func _build() -> void:
 	rng.seed = 20260609
 
 	var grass_mesh := _build_grass_mesh()
-	var pine_mesh := _merged_mesh(PINE_GLB, 0.1)
-	var forest_mesh := _merged_mesh(FOREST_GLB, 0.1)
-	if grass_mesh == null or pine_mesh == null or forest_mesh == null:
+	var pine_mesh := _source_mesh(PINE_GLB)
+	var pine2_mesh := _source_mesh(PINE2_GLB)
+	if grass_mesh == null or pine_mesh == null or pine2_mesh == null:
 		push_error("VegetationScatter: missing vegetation meshes")
 		return
+	var pine_height := maxf(pine_mesh.get_aabb().size.y, 0.001)
+	var pine2_height := maxf(pine2_mesh.get_aabb().size.y, 0.001)
 
 	var tris := _green_triangles()
 	if tris.is_empty():
@@ -186,11 +192,13 @@ func _build() -> void:
 		grass_colors)
 
 	# ---- dense forest across the bridge (NW of the river) ----
-	var forest_xforms: Array[Transform3D] = []
+	var forest_xforms_a: Array[Transform3D] = []
+	var forest_xforms_b: Array[Transform3D] = []
 	var occupied := {}
 	var forest_target: int = FOREST_MAX
 	attempts = 0
-	while forest_xforms.size() < forest_target and attempts < forest_target * 8:
+	while forest_xforms_a.size() + forest_xforms_b.size() < forest_target \
+			and attempts < forest_target * 8:
 		attempts += 1
 		var s := _sample_triangle(tris, rng)
 		var p2 := Vector2(s.point.x, s.point.z)
@@ -200,28 +208,57 @@ func _build() -> void:
 			continue
 		if _near_river(p2):
 			continue
+		var ground_hit := _ground(space, p2.x, p2.y)
+		if ground_hit.is_empty() or ground_hit.normal.y < 0.6:
+			continue
+		# Reject rocks, structures or stale collision surfaces above/below the
+		# sampled visual terrain instead of leaving a tree floating on them.
+		if absf(ground_hit.position.y - s.point.y) > PINE_GROUND_TOLERANCE:
+			continue
 		if not _claim_spacing(occupied, p2, FOREST_MIN_SPACING):
 			continue
-		var t := _xform(s.point, rng, 0.9, 1.5)  # 10.6 m .. 17.6 m tall
-		forest_xforms.append(t)
+		var use_pine1 := rng.randf() < 0.5
+		var source_height := pine_height if use_pine1 else pine2_height
+		var grounded_position: Vector3 = ground_hit.position + \
+			Vector3.DOWN * PINE_GROUND_EMBED
+		var t := _tree_xform(grounded_position, rng, source_height, 0.9, 1.5)
+		if use_pine1:
+			forest_xforms_a.append(t)
+		else:
+			forest_xforms_b.append(t)
 		_add_trunk(t.origin, t.basis.get_scale().x)
-	_stats.forest = forest_xforms.size()
-	# Shadows off for the mass forest: ~430 trees, the shadow pass would
-	# halve the framerate. Accent pines keep shadows.
-	_add_chunked("Forest", forest_mesh, forest_xforms, FOREST_CHUNK,
+	_stats.forest = forest_xforms_a.size() + forest_xforms_b.size()
+	# Shadows off for the mass forest: the shadow pass would halve the framerate.
+	# Accent pines keep shadows.
+	_add_chunked("ForestPine1", pine_mesh, forest_xforms_a, FOREST_CHUNK,
+		FOREST_VIS_RANGE, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
+
+	_add_chunked("ForestPine2", pine2_mesh, forest_xforms_b, FOREST_CHUNK,
 		FOREST_VIS_RANGE, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
 
 	# ---- accent pines: borders + mountain fringe ----
-	var pine_xforms: Array[Transform3D] = []
+	var pine_xforms_a: Array[Transform3D] = []
+	var pine_xforms_b: Array[Transform3D] = []
 	for p in PINES:
 		var hit := _ground(space, p.x, p.y)
 		if hit.is_empty() or hit.normal.y < 0.5 or not _allowed(p.x, p.y):
 			continue
-		var t := _xform(hit.position, rng, 0.9, 1.45)
-		pine_xforms.append(t)
+		var use_pine1 := rng.randf() < 0.5
+		var source_height := pine_height if use_pine1 else pine2_height
+		var grounded_position: Vector3 = hit.position + \
+			Vector3.DOWN * PINE_GROUND_EMBED
+		var t := _tree_xform(grounded_position, rng, source_height, 0.9, 1.45)
+		if use_pine1:
+			pine_xforms_a.append(t)
+		else:
+			pine_xforms_b.append(t)
 		_add_trunk(t.origin, t.basis.get_scale().x)
-	_stats.pines = pine_xforms.size()
-	_add_chunked("Pines", pine_mesh, pine_xforms, 999.0, 0.0,
+	_stats.pines = pine_xforms_a.size() + pine_xforms_b.size()
+
+	_add_chunked("Pines1", pine_mesh, pine_xforms_a, 999.0, 0.0,
+		GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
+
+	_add_chunked("Pines2", pine2_mesh, pine_xforms_b, 999.0, 0.0,
 		GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
 
 	print("VegetationScatter: grass=%d banks=%d forest=%d pines=%d trunks=%d"
@@ -350,6 +387,12 @@ func _xform(pos: Vector3, rng: RandomNumberGenerator,
 	return Transform3D(basis, pos)
 
 
+func _tree_xform(pos: Vector3, rng: RandomNumberGenerator,
+		source_height: float, smin: float, smax: float) -> Transform3D:
+	var normalized_scale := PINE_TARGET_HEIGHT / maxf(source_height, 0.001)
+	return _xform(pos, rng, smin * normalized_scale, smax * normalized_scale)
+
+
 ## Grass clump transform aligned to the terrain normal (blended toward vertical
 ## so steep triangles do not lay grass flat), random spin and scale.
 func _grass_xform(pos: Vector3, normal: Vector3,
@@ -373,7 +416,7 @@ func _grass_color(rng: RandomNumberGenerator) -> Color:
 
 ## Split transforms into world-grid chunks; one MultiMeshInstance3D per
 ## chunk with a visibility range, so distant vegetation stops rendering.
-func _add_chunked(prefix: String, mesh: ArrayMesh, xforms: Array[Transform3D],
+func _add_chunked(prefix: String, mesh: Mesh, xforms: Array[Transform3D],
 		chunk_size: float, vis_range: float, shadow: int,
 		colors: PackedColorArray = PackedColorArray()) -> void:
 	var use_colors := colors.size() == xforms.size() and not colors.is_empty()
@@ -470,31 +513,56 @@ func _grass_material() -> StandardMaterial3D:
 	return m
 
 
-## Merge every solid MeshInstance3D in a GLB scene into one ArrayMesh.
-## min_height filters out flat particle-emitter planes (grass.glb ships two).
-func _merged_mesh(scene_path: String, min_height: float) -> ArrayMesh:
+## pine.glb and pine2.glb each contain one already base-centered mesh. Extract
+## it directly so their large exported node translations are never baked into
+## the MultiMesh geometry and their imported materials remain untouched.
+func _source_mesh(scene_path: String) -> Mesh:
 	var packed: PackedScene = load(scene_path)
 	if packed == null:
 		return null
 	var inst := packed.instantiate()
-	var out := ArrayMesh.new()
-	_collect_surfaces(inst, out, min_height)
+	var source := _find_mesh_instance(inst)
+	var out: Mesh = null
+	if source != null:
+		out = source.mesh.duplicate() as Mesh
 	inst.free()
-	if out.get_surface_count() == 0:
-		return null
 	return out
 
+
+func _find_mesh_instance(node: Node) -> MeshInstance3D:
+	if node is MeshInstance3D and (node as MeshInstance3D).mesh != null:
+		return node as MeshInstance3D
+	for child in node.get_children():
+		var found := _find_mesh_instance(child)
+		if found != null:
+			return found
+	return null
 
 func _collect_surfaces(node: Node, out: ArrayMesh, min_height: float) -> void:
 	var mi := node as MeshInstance3D
 	if mi != null and mi.mesh != null:
-		var aabb := mi.mesh.get_aabb()
+		var xf := mi.global_transform
+		var aabb := xf * mi.mesh.get_aabb()
+
 		if aabb.size.y >= min_height:
 			for s in mi.mesh.get_surface_count():
+				var arrays := mi.mesh.surface_get_arrays(s)
+
+				var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+				for i in verts.size():
+					verts[i] = xf * verts[i]
+				arrays[Mesh.ARRAY_VERTEX] = verts
+
+				if arrays[Mesh.ARRAY_NORMAL] != null:
+					var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+					for i in normals.size():
+						normals[i] = (xf.basis * normals[i]).normalized()
+					arrays[Mesh.ARRAY_NORMAL] = normals
+
 				var idx := out.get_surface_count()
-				out.add_surface_from_arrays(
-					Mesh.PRIMITIVE_TRIANGLES, mi.mesh.surface_get_arrays(s))
+				out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 				out.surface_set_material(idx, _adjusted(mi.get_active_material(s)))
+
 	for child in node.get_children():
 		_collect_surfaces(child, out, min_height)
 
@@ -504,8 +572,10 @@ func _adjusted(mat: Material) -> Material:
 	var std := mat as StandardMaterial3D
 	if std == null:
 		return mat
+
 	var copy := std.duplicate() as StandardMaterial3D
 	copy.roughness = 1.0
 	copy.metallic = 0.0
 	copy.metallic_specular = 0.15
+	copy.cull_mode = BaseMaterial3D.CULL_DISABLED
 	return copy

@@ -30,7 +30,7 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/ambientcg/plugin.cfg", "res://addons/debug_camera/plugin.cfg", "res://addons/godot_ai/plugin.cfg", "res://addons/godot_doctor/plugin.cfg", "res://addons/godot_mcp_server/plugin.cfg", "res://addons/sky_3d/plugin.cfg", "res://addons/third-person-camera/plugin.cfg")
+enabled=PackedStringArray("res://addons/ambientcg/plugin.cfg", "res://addons/debug_camera/plugin.cfg", "res://addons/godot_doctor/plugin.cfg", "res://addons/sky_3d/plugin.cfg", "res://addons/third-person-camera/plugin.cfg")
 
 [input]
 

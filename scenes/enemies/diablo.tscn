@@ -1,41 +1,36 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://boyteiyf3nx7u"]
 
-[ext_resource type="Script" path="res://scripts/enemies/diablo.gd" id="1_diablo_script"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_diablo"]
-albedo_color = Color(0.72, 0.08, 0.05, 1)
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_diablo"]
-radius = 0.5
-height = 2.0
+[ext_resource type="Script" uid="uid://ffti6tpm75qa" path="res://scripts/enemies/diablo.gd" id="1_diablo_script"]
+[ext_resource type="PackedScene" uid="uid://lnk6qfsrshk1" path="res://assets/models/characters/enemies/diablo.glb" id="2_0qpmw"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_diablo"]
-radius = 0.5
-height = 2.0
+radius = 0.55
+height = 2.6
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_hitbox"]
-radius = 0.9
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hitbox"]
+radius = 0.85
+height = 2.8
 
-[node name="Diablo" type="CharacterBody3D" groups=["enemies", "diablo"]]
+[node name="Diablo" type="CharacterBody3D" unique_id=995245451 groups=["diablo", "enemies"]]
 collision_layer = 4
 collision_mask = 3
 script = ExtResource("1_diablo_script")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=426573474]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
 shape = SubResource("CapsuleShape3D_diablo")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-mesh = SubResource("CapsuleMesh_diablo")
-surface_material_override/0 = SubResource("StandardMaterial3D_diablo")
+[node name="Visual" type="Node3D" parent="."]
 
-[node name="HitBox" type="Area3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+[node name="diablo" parent="Visual" unique_id=1776177006 instance=ExtResource("2_0qpmw")]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
+
+[node name="HitBox" type="Area3D" parent="." unique_id=1259634098]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
 collision_layer = 4
 collision_mask = 1
 monitoring = true
 monitorable = true
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="HitBox"]
-shape = SubResource("SphereShape3D_hitbox")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HitBox" unique_id=285321171]
+shape = SubResource("CapsuleShape3D_hitbox")

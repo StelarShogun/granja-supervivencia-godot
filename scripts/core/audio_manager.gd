@@ -72,6 +72,7 @@ const FADE_SPEED := 2.0
 var _cache: Dictionary = {}                  # path → AudioStream base (sin loop)
 var _loop_cache: Dictionary = {}             # path → AudioStream duplicado con loop=true
 var _menu_music: AudioStreamPlayer
+var _footstep_player: AudioStreamPlayer
 var _ambient_players: Dictionary = {}        # layer → AudioStreamPlayer
 var _ambient_loaded_path: Dictionary = {}    # layer → String (path actualmente cargado)
 var _ambient_targets: Dictionary = {}        # layer → float  objetivo
@@ -85,6 +86,8 @@ var _master_linear: float = 0.8
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_menu_music = _make_player("MenuMusic")
+	_footstep_player = _make_player("PlayerFootsteps")
+	_menu_music.stream = _looping_stream(MUSIC_MENU)
 
 	for layer in AMBIENT_LAYERS:
 		_ambient_players[layer]     = _make_player("Amb_%s" % layer)
@@ -104,7 +107,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if not _gameplay_active:
+	if not _gameplay_active or get_tree().paused:
+		_stop_footsteps()
 		return
 	for layer in AMBIENT_LAYERS:
 		var target  := float(_ambient_targets.get(layer, 0.0))
@@ -121,13 +125,19 @@ func _process(delta: float) -> void:
 ## Inicia la música del menú. Detiene todo lo demás.
 func play_menu_music() -> void:
 	_gameplay_active = false
+	_stop_footsteps()
 	_stop_all_ambients()
-	_start_loop(_menu_music, MUSIC_MENU, -8.0)
+	_menu_music.volume_db = -8.0
+	if _menu_music.stream == null:
+		_menu_music.stream = _looping_stream(MUSIC_MENU)
+	if _menu_music.stream != null and not _menu_music.playing:
+		_menu_music.play()
 
 
 ## El jugador entró al mundo. La música del menú se corta.
 func enter_gameplay() -> void:
 	_menu_music.stop()
+	_stop_footsteps()
 	_gameplay_active = true
 	# Los ambients arrancan en 0; AmbientAudioController los subirá según posición.
 	for layer in AMBIENT_LAYERS:
@@ -144,9 +154,20 @@ func set_ambient_weight(layer: String, weight: float) -> void:
 	_ambient_targets[layer] = clampf(weight, 0.0, 1.0)
 
 
-## Pasos sobre tierra: se llama solo cuando el jugador se mueve sobre el suelo.
-func play_footstep() -> void:
-	_play_one_shot(SFX_FOOTSTEP, -12.0, randf_range(0.9, 1.1))
+## Mantiene el loop de pasos activo solo mientras el jugador se desplaza.
+func set_footsteps_active(moving: bool, running: bool = false) -> void:
+	if not _gameplay_active or not moving or get_tree().paused:
+		_stop_footsteps()
+		return
+	var stream := _looping_stream(SFX_FOOTSTEP)
+	if stream == null:
+		return
+	if _footstep_player.stream != stream:
+		_footstep_player.stream = stream
+	_footstep_player.volume_db = -14.0
+	_footstep_player.pitch_scale = 1.15 if running else 1.0
+	if not _footstep_player.playing:
+		_footstep_player.play()
 
 
 ## Salto: se llama una sola vez al despegar del suelo.
@@ -203,6 +224,7 @@ func get_animal_stream(kind: String) -> AudioStream:
 ## Detiene todo el audio de juego (victoria / derrota).
 func stop_gameplay() -> void:
 	_gameplay_active = false
+	_stop_footsteps()
 	_stop_all_ambients()
 
 
@@ -264,6 +286,11 @@ func _stop_all_ambients() -> void:
 		if player != null and player.playing:
 			player.stop()
 		_ambient_loaded_path[layer] = ""
+
+
+func _stop_footsteps() -> void:
+	if _footstep_player != null and _footstep_player.playing:
+		_footstep_player.stop()
 
 
 func _make_player(node_name: String) -> AudioStreamPlayer:
