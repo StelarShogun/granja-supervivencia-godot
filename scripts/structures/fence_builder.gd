@@ -6,8 +6,8 @@ extends Node3D
 ## zero gaps, zero overlaps, no fan-shaped seams on slopes. Convex bumps get
 ## one subdivision pass so the rail never sinks into the ground mid-tile.
 ## The gate edge leaves an exact gate_width opening (posts/doors are built by
-## the CorralGate scene). Visuals use one MultiMeshInstance3D; collision is one
-## oriented box per tile under a single StaticBody3D on layer 2.
+## the CorralGate scene). Visuals use the original fence_unit.glb mesh; collision
+## is one oriented box per tile under a single StaticBody3D on layer 2.
 
 @export var fence_glb: PackedScene
 @export var enclosure_min := Vector2(90.0, -160.0)   ## Godot X,Z
@@ -98,7 +98,8 @@ func _build() -> void:
 
 	var inv := global_transform.affine_inverse()
 
-	# visuals
+	# Render the existing fence model. Every transform uses local scaling, so
+	# rotating a tile around the perimeter cannot shear or separate its pieces.
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = _tile_mesh
@@ -110,13 +111,14 @@ func _build() -> void:
 	mmi.multimesh = mm
 	add_child(mmi)
 
+	var aabb := _tile_mesh.get_aabb()
+
 	# collision: one oriented box per tile, matching the stretched visual
 	var body := StaticBody3D.new()
 	body.name = "FenceCollision"
 	body.collision_layer = 2
 	body.collision_mask = 0
 	add_child(body)
-	var aabb := _tile_mesh.get_aabb()
 	for xf in xforms:
 		var box_size := Vector3(
 			aabb.size.x * xf.basis.get_scale().x,
@@ -211,7 +213,7 @@ func _chain_segment(a: Vector2, b: Vector2, out: Array[Transform3D],
 		_tile_between(refined[i], refined[i + 1], dir, out)
 
 
-## Stretches one tile exactly between two shared 3D points.
+## Stretches one complete fence model exactly between two shared ground points.
 func _tile_between(p: Vector3, q: Vector3, dir: Vector2,
 		out: Array[Transform3D]) -> void:
 	var dh := Vector2(q.x - p.x, q.z - p.z).length()
@@ -223,8 +225,8 @@ func _tile_between(p: Vector3, q: Vector3, dir: Vector2,
 	var pitch := atan2(dy, dh)
 	var sx := chord / _mesh_len       # stretch so endpoints meet exactly
 	var basis := (Basis(Vector3.UP, yaw)
-		* Basis(Vector3(0, 0, 1), pitch)).scaled(
-		Vector3(sx, fence_scale, depth_scale))
+		* Basis(Vector3(0.0, 0.0, 1.0), pitch)).scaled_local(
+			Vector3(sx, fence_scale, depth_scale))
 	var mid := (p + q) * 0.5 + Vector3.DOWN * embed
 	out.append(Transform3D(basis, mid))
 

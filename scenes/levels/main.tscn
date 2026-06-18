@@ -171,13 +171,18 @@ size = Vector3(460, 90, 4)
 size = Vector3(4, 90, 460)
 
 [sub_resource type="BoxMesh" id="BoxMesh_corral"]
-size = Vector3(5, 0.08, 5)
+size = Vector3(10, 0.1, 10)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_corral"]
-albedo_color = Color(0.26, 0.58, 0.24, 1)
+transparency = 1
+albedo_color = Color(1, 0.66, 0.08, 0.72)
+emission_enabled = true
+emission = Color(1, 0.42, 0.03, 1)
+emission_energy_multiplier = 1.8
+roughness = 0.82
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_corral"]
-size = Vector3(5, 2, 5)
+size = Vector3(10, 2, 10)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_safe_corral_zone"]
 size = Vector3(58, 6, 56)
