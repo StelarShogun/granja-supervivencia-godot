@@ -43,7 +43,7 @@ func _build() -> void:
 	var layer_index := 0
 	for layer in LAYERS:
 		var noise := FastNoiseLite.new()
-		noise.seed = seed + layer_index * 31
+		noise.seed = noise_seed + layer_index * 31
 		noise.frequency = 0.01
 		noise.fractal_octaves = 4
 		_build_ring(layer, noise, rng, layer_index)
