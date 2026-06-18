@@ -1,5 +1,8 @@
 [gd_scene format=3 uid="uid://b585u1vyhkd8h"]
 
-[ext_resource type="PackedScene" uid="uid://d2i51odey6adv" path="res://assets/models/environment/Terreno_Finca.glb" id="1_dwf8a"]
+[ext_resource type="PackedScene" uid="uid://dtldk10kxdw8h" path="res://assets/models/environment/Terreno_Finca.glb" id="1_dwf8a"]
 
 [node name="Terreno_Finca" unique_id=251770996 instance=ExtResource("1_dwf8a")]
+
+[node name="Bridge_Part_01" parent="." index="1408" unique_id=1475870784]
+transform = Transform3D(1.7381167, -0.11772942, -2.5179162, 0.35663506, 1.0559707, -0.011138577, 1.6267108, -0.10571559, 2.692799, -21.991121, -8.690506, -14.477913)

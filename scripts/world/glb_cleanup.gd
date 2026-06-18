@@ -3,16 +3,17 @@ extends Node3D
 ## Removes obsolete / duplicate meshes that should no longer ship in Terreno_Finca.glb.
 ## Keeps runtime stable when the editor still holds a stale GLB instance.
 
+## NOTE: Bridge_* are intentionally NOT removed anymore. Bridges now live in the
+## terrain .blend (placed by hand) and ship in the GLB; deleting them here is
+## what made one of the two bridges vanish at runtime.
 const REMOVE_EXACT := [
 	"Barn_01",
 	"Corral_01",
 	"Ranch_01",
 	"Plain_Farm_Area",
-	"Bridge_Ramp_South",
 	"Lake_Water_Surface",
 	"River_Water_Surface",
 	"Borde_Alto_Norte",
-	"Bridge_Part_01",
 ]
 
 const REMOVE_PREFIXES := [

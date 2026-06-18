@@ -84,6 +84,11 @@ const ANIMATION_BY_MODEL := {
 
 var collected: bool = false
 
+## Half-extent (XZ) of the area a delivered animal roams inside the corral.
+const CORRAL_HALF := Vector2(22.0, 22.0)
+var _in_corral: bool = false
+var _corral_center: Vector3 = Vector3.ZERO
+
 var _wander_target: Vector3
 var _wander_timer: float = 0.0
 var _bleat_timer: float = 0.0
@@ -144,7 +149,8 @@ func _ground_hit(at: Vector3) -> Dictionary:
 
 
 func _process(delta: float) -> void:
-	if collected:
+	# Collected animals freeze, except those released to roam the corral.
+	if collected and not _in_corral:
 		return
 
 	if _following and _follow_target != null:
@@ -170,7 +176,10 @@ func _process(delta: float) -> void:
 
 	_wander_timer -= delta
 	if _wander_timer <= 0.0:
-		_pick_wander_target()
+		if _in_corral:
+			_pick_corral_target()
+		else:
+			_pick_wander_target()
 		_wander_timer = randf_range(wander_interval_min, wander_interval_max)
 
 	var diff := _wander_target - global_position
@@ -217,8 +226,10 @@ func _resolve_animal_kind() -> void:
 func _setup_voice() -> void:
 	_voice = AudioStreamPlayer3D.new()
 	_voice.name = "AnimalVoice"
-	_voice.max_distance = proximity_radius
-	_voice.unit_size = 5.0
+	# Audible across the whole proximity radius (the old 5 m unit_size made the
+	# bleats nearly silent at normal walking distance).
+	_voice.max_distance = proximity_radius + 12.0
+	_voice.unit_size = 12.0
 	_voice.bus = &"Master"
 	var stream := AudioManager.get_animal_stream(animal_kind)
 	if stream != null:
@@ -244,7 +255,7 @@ func _bleat_spatial(distance: float) -> void:
 	if _voice == null or _voice.stream == null or _voice.playing:
 		return
 	var closeness := 1.0 - clampf(distance / proximity_radius, 0.0, 1.0)
-	_voice.volume_db = lerpf(-24.0, -3.0, closeness)
+	_voice.volume_db = lerpf(-12.0, 3.0, closeness)
 	_voice.pitch_scale = randf_range(0.94, 1.06)
 	_voice.play()
 
@@ -270,6 +281,13 @@ func _pick_wander_target() -> void:
 	_wander_target = Vector3(nx, global_position.y, nz)
 
 
+## Random roam target kept inside the corral rectangle around its centre.
+func _pick_corral_target() -> void:
+	var nx := _corral_center.x + randf_range(-CORRAL_HALF.x, CORRAL_HALF.x)
+	var nz := _corral_center.z + randf_range(-CORRAL_HALF.y, CORRAL_HALF.y)
+	_wander_target = Vector3(nx, global_position.y, nz)
+
+
 func interact(player: Node) -> void:
 	if player != null and player.is_in_group("player"):
 		_try_pickup(player)
@@ -287,17 +305,25 @@ func drop(drop_position: Vector3) -> void:
 	snap_to_ground()
 
 
-func register_in_corral() -> void:
+## Delivered to the corral: counts for the goal but stays alive, released to
+## wander freely inside the corral instead of disappearing.
+func register_in_corral(corral_center: Vector3 = Vector3.INF) -> void:
 	if collected:
 		return
 	collected = true
 	_following = false
 	_follow_target = null
-	monitoring = false
-	monitorable = false
+	# Stop being pickable/deliverable again, but stay visible and roaming.
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
+	_in_corral = true
+	if corral_center != Vector3.INF:
+		_corral_center = corral_center
+	else:
+		_corral_center = global_position
+	_wander_target = global_position
+	_wander_timer = randf_range(wander_interval_min, wander_interval_max)
 	AudioManager.play_animal_sfx(animal_kind, -3.0)
-	hide()
-	call_deferred("queue_free")
 
 
 func _on_body_entered(body: Node3D) -> void:
@@ -314,7 +340,10 @@ func _try_pickup(player: Node) -> void:
 		if ok:
 			_following = true
 			_follow_target = player as Node3D
+			# Stop being detectable so the carried animal never steals the
+			# player's E key from a nearby gate/interactive while following.
 			set_deferred("monitoring", false)
+			set_deferred("monitorable", false)
 			_bleat_spatial(0.5)
 
 

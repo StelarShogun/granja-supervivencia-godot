@@ -22,6 +22,10 @@ const FOREST_GLB := "res://assets/models/environment/pine_forest.glb"
 ## Terrain surfaces that count as "green ground".
 const GREEN_MAT_KEYWORDS := ["grass", "forest"]
 
+## Grass clump scatter disabled: the source grass.glb clumps read as pale
+## floating litter across the whole map. Trees/pines stay. Flip to re-enable.
+const ENABLE_GRASS_CLUMPS := false
+
 const GRASS_PER_M2 := 1.0 / 34.0
 const GRASS_MAX := 2600
 const GRASS_CHUNK := 56.0
@@ -119,8 +123,15 @@ const RAY_LEN := 500.0
 
 var _stats := {"grass": 0, "banks": 0, "forest": 0, "pines": 0, "trunks": 0}
 
+## Disabled: the scattered pine/grass meshes caused lag, did not match the
+## terrain and added stray collisions. Vegetation, if wanted later, should be
+## baked into the terrain .blend instead (see blend-first workflow).
+const ENABLED := false
+
 
 func _ready() -> void:
+	if not ENABLED:
+		return
 	# Wait until the sibling TerrainCollision has built its physics shapes
 	# (needed for the few raycast-based placements).
 	await get_tree().physics_frame
@@ -132,10 +143,9 @@ func _build() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 20260609
 
-	var grass_mesh := _build_grass_mesh()
 	var pine_mesh := _merged_mesh(PINE_GLB, 0.1)
 	var forest_mesh := _merged_mesh(FOREST_GLB, 0.1)
-	if grass_mesh == null or pine_mesh == null or forest_mesh == null:
+	if pine_mesh == null or forest_mesh == null:
 		push_error("VegetationScatter: missing vegetation meshes")
 		return
 
@@ -145,45 +155,43 @@ func _build() -> void:
 		return
 	var total_area: float = tris.cum_area[tris.cum_area.size() - 1]
 
-	# ---- grass everywhere on green ground ----
-	# Each clump is aligned to the terrain normal (softly blended toward
-	# vertical) and given a random green tint, so the field never reads as one
-	# repeated upright card.
-	var grass_count: int = mini(int(total_area * GRASS_PER_M2), GRASS_MAX)
-	var grass_xforms: Array[Transform3D] = []
-	var grass_colors: PackedColorArray = PackedColorArray()
-	var attempts := 0
-	while grass_xforms.size() < grass_count and attempts < grass_count * 3:
-		attempts += 1
-		var s := _sample_triangle(tris, rng)
-		if s.normal.y < 0.7:
-			continue
-		if not _allowed(s.point.x, s.point.z):
-			continue
-		grass_xforms.append(_grass_xform(s.point, s.normal, rng))
-		grass_colors.append(_grass_color(rng))
-	_stats.grass = grass_xforms.size()
-
-	# riverbank accents (raycast-snapped)
 	var space := get_world_3d().direct_space_state
-	for bank in GRASS_BANKS:
-		for i in 2:
-			var x: float = bank.x + rng.randf_range(-2.5, 2.5)
-			var z: float = bank.z + rng.randf_range(-2.5, 2.5)
-			if not _allowed(x, z):
-				continue
-			var hit := _ground(space, x, z)
-			if hit.is_empty() or hit.normal.y < 0.7:
-				continue
-			if absf(hit.position.y - bank.y) > 2.0:
-				continue
-			grass_xforms.append(_grass_xform(hit.position, hit.normal, rng))
-			grass_colors.append(_grass_color(rng))
-			_stats.banks += 1
+	var attempts := 0
 
-	_add_chunked("Grass", grass_mesh, grass_xforms, GRASS_CHUNK,
-		GRASS_VIS_RANGE, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
-		grass_colors)
+	# ---- grass clumps (disabled by default: they read as floating litter) ----
+	if ENABLE_GRASS_CLUMPS:
+		var grass_mesh := _build_grass_mesh()
+		if grass_mesh != null:
+			var grass_count: int = mini(int(total_area * GRASS_PER_M2), GRASS_MAX)
+			var grass_xforms: Array[Transform3D] = []
+			var grass_colors: PackedColorArray = PackedColorArray()
+			while grass_xforms.size() < grass_count and attempts < grass_count * 3:
+				attempts += 1
+				var s := _sample_triangle(tris, rng)
+				if s.normal.y < 0.7:
+					continue
+				if not _allowed(s.point.x, s.point.z):
+					continue
+				grass_xforms.append(_grass_xform(s.point, s.normal, rng))
+				grass_colors.append(_grass_color(rng))
+			_stats.grass = grass_xforms.size()
+			for bank in GRASS_BANKS:
+				for i in 2:
+					var x: float = bank.x + rng.randf_range(-2.5, 2.5)
+					var z: float = bank.z + rng.randf_range(-2.5, 2.5)
+					if not _allowed(x, z):
+						continue
+					var hit := _ground(space, x, z)
+					if hit.is_empty() or hit.normal.y < 0.7:
+						continue
+					if absf(hit.position.y - bank.y) > 2.0:
+						continue
+					grass_xforms.append(_grass_xform(hit.position, hit.normal, rng))
+					grass_colors.append(_grass_color(rng))
+					_stats.banks += 1
+			_add_chunked("Grass", grass_mesh, grass_xforms, GRASS_CHUNK,
+				GRASS_VIS_RANGE, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+				grass_colors)
 
 	# ---- dense forest across the bridge (NW of the river) ----
 	var forest_xforms: Array[Transform3D] = []
@@ -196,7 +204,7 @@ func _build() -> void:
 		var p2 := Vector2(s.point.x, s.point.z)
 		if not _in_forest_region(p2):
 			continue
-		if s.normal.y < 0.6 or not _allowed(p2.x, p2.y):
+		if s.normal.y < 0.78 or not _allowed(p2.x, p2.y):
 			continue
 		if _near_river(p2):
 			continue
@@ -500,12 +508,29 @@ func _collect_surfaces(node: Node, out: ArrayMesh, min_height: float) -> void:
 
 
 ## Match the low-poly rural look: flat roughness, low specular.
+## Foliage surfaces (the pine needle/cap cards) ship a broken alpha-scissor
+## texture that renders as speckled "confetti" and leaves the trees looking bare.
+## We replace any transparent material with a flat opaque green so needles read
+## as solid low-poly foliage. Opaque materials (bark) keep their texture.
 func _adjusted(mat: Material) -> Material:
 	var std := mat as StandardMaterial3D
 	if std == null:
 		return mat
+	if std.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+		return _foliage_material()
 	var copy := std.duplicate() as StandardMaterial3D
 	copy.roughness = 1.0
 	copy.metallic = 0.0
 	copy.metallic_specular = 0.15
 	return copy
+
+
+func _foliage_material() -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(0.16, 0.33, 0.18)
+	m.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+	m.roughness = 1.0
+	m.metallic = 0.0
+	m.metallic_specular = 0.1
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return m

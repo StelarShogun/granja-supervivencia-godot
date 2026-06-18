@@ -72,6 +72,9 @@ const FADE_SPEED := 2.0
 var _cache: Dictionary = {}                  # path → AudioStream base (sin loop)
 var _loop_cache: Dictionary = {}             # path → AudioStream duplicado con loop=true
 var _menu_music: AudioStreamPlayer
+## Dedicated looping footstep player: the source clip is a long continuous walk
+## loop, so it is toggled on/off with movement instead of fired as one-shots.
+var _footsteps: AudioStreamPlayer
 var _ambient_players: Dictionary = {}        # layer → AudioStreamPlayer
 var _ambient_loaded_path: Dictionary = {}    # layer → String (path actualmente cargado)
 var _ambient_targets: Dictionary = {}        # layer → float  objetivo
@@ -85,6 +88,11 @@ var _master_linear: float = 0.8
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_menu_music = _make_player("MenuMusic")
+	_footsteps = _make_player("Footsteps")
+	var step_stream := _looping_stream(SFX_FOOTSTEP)
+	if step_stream != null:
+		_footsteps.stream = step_stream
+		_footsteps.volume_db = -11.0
 
 	for layer in AMBIENT_LAYERS:
 		_ambient_players[layer]     = _make_player("Amb_%s" % layer)
@@ -144,9 +152,22 @@ func set_ambient_weight(layer: String, weight: float) -> void:
 	_ambient_targets[layer] = clampf(weight, 0.0, 1.0)
 
 
-## Pasos sobre tierra: se llama solo cuando el jugador se mueve sobre el suelo.
+## Footsteps: continuous loop toggled by the player each frame. Plays only while
+## actually moving on the ground; speeds up slightly while running.
+func set_footsteps(active: bool, running: bool = false) -> void:
+	if _footsteps == null or _footsteps.stream == null:
+		return
+	if active and _gameplay_active:
+		_footsteps.pitch_scale = 1.28 if running else 1.0
+		if not _footsteps.playing:
+			_footsteps.play()
+	elif _footsteps.playing:
+		_footsteps.stop()
+
+
+## Backwards-compatible no-op (footsteps are now a continuous loop).
 func play_footstep() -> void:
-	_play_one_shot(SFX_FOOTSTEP, -12.0, randf_range(0.9, 1.1))
+	pass
 
 
 ## Salto: se llama una sola vez al despegar del suelo.
@@ -204,6 +225,8 @@ func get_animal_stream(kind: String) -> AudioStream:
 func stop_gameplay() -> void:
 	_gameplay_active = false
 	_stop_all_ambients()
+	if _footsteps != null and _footsteps.playing:
+		_footsteps.stop()
 
 
 func is_gameplay_active() -> bool:

@@ -60,9 +60,7 @@ var _frozen_left: float = 0.0
 var _mud_slow_left: float = 0.0
 var _interaction_targets: Array[Node] = []
 var _camera_pitch: float = -15.0
-var _footstep_timer: float = 0.0
 var _run_wind_intensity: float = 0.0
-var _was_moving: bool = false
 var _animation_player: AnimationPlayer
 var _current_animation: StringName = &""
 var _machete_visual: Node3D
@@ -124,6 +122,7 @@ func _physics_process(delta: float) -> void:
 		_run_wind_intensity = 0.0
 		velocity.x = 0.0
 		velocity.z = 0.0
+		AudioManager.set_footsteps(false)
 		_apply_land_gravity(delta)
 		move_and_slide()
 		_update_animation(Vector2.ZERO)
@@ -133,6 +132,7 @@ func _physics_process(delta: float) -> void:
 		_run_wind_intensity = 0.0
 		velocity.x = 0.0
 		velocity.z = 0.0
+		AudioManager.set_footsteps(false)
 		_apply_land_gravity(delta)
 		move_and_slide()
 		_update_animation(Vector2.ZERO)
@@ -502,6 +502,10 @@ func _update_timers(delta: float) -> void:
 func _try_interact() -> void:
 	_prune_interaction_targets()
 	for target in _interaction_targets:
+		# Never let the animal we are carrying consume the interact key — it
+		# would block opening the corral gate while delivering.
+		if target == carried_animal:
+			continue
 		if target != null and target.has_method("interact"):
 			target.interact(self)
 			return
@@ -556,32 +560,17 @@ func _update_run_wind(input_dir: Vector2) -> void:
 	_run_wind_intensity = move_toward(_run_wind_intensity, target, get_physics_process_delta_time() * 3.0)
 
 
-func _update_footsteps(delta: float, input_dir: Vector2) -> void:
-	if _frozen_left > 0.0:
-		_footstep_timer = 0.0
-		_was_moving = false
-		return
-
+func _update_footsteps(_delta: float, input_dir: Vector2) -> void:
 	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 	var wants_move := input_dir.length_squared() > 0.001
-	var is_moving := wants_move and is_on_floor() and horizontal_speed >= 1.2
-
-	if not is_moving:
-		_footstep_timer = 0.0
-		_was_moving = false
-		return
-
-	if not _was_moving:
-		var interval := 0.38 if (Input.is_action_pressed("run") and not is_crouching) else 0.52
-		_footstep_timer = interval * 0.55
-		_was_moving = true
-		return
-
-	_footstep_timer -= delta
-	if _footstep_timer <= 0.0:
-		AudioManager.play_footstep()
-		var interval := 0.38 if (Input.is_action_pressed("run") and not is_crouching) else 0.52
-		_footstep_timer = interval
+	var is_moving := (
+		wants_move
+		and is_on_floor()
+		and horizontal_speed >= 1.2
+		and _frozen_left <= 0.0
+	)
+	var running := is_moving and Input.is_action_pressed("run") and not is_crouching
+	AudioManager.set_footsteps(is_moving, running)
 
 
 func _find_animation_player(root: Node) -> AnimationPlayer:

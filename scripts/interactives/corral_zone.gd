@@ -17,8 +17,10 @@ func set_count(count: int, goal: int) -> void:
 	animal_goal = goal
 
 
-func interact(_player: Node) -> void:
-	_show_count_message()
+## NOTE: deliberately no interact() method. Delivery is automatic on
+## body_entered; exposing interact() made this zone steal the E key from the
+## adjacent CorralGate (the player could not open the gate while standing in
+## the corral mouth). The gate is now the only E-target near the corral.
 
 
 func _on_body_entered(body: Node3D) -> void:
@@ -36,7 +38,7 @@ func _try_receive_animal(player: Node) -> void:
 		_show_count_message()
 		return
 	if animal.has_method("register_in_corral"):
-		animal.register_in_corral()
+		animal.register_in_corral(global_position)
 	var manager := _get_game_manager()
 	if manager != null and manager.has_method("collect_animal"):
 		manager.collect_animal(animal)

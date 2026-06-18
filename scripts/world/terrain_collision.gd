@@ -16,10 +16,11 @@ const STRUCTURE_PREFIXES := [
 	"Corral_Fence",
 	"Corral_GatePost",
 	"Cave_Lip",
+	"Bridge_",
 ]
-## NOTE: "Bridge_" removed — the GLB Bridge_Part_01 sits sunken at the
-## gorge floor (obsolete; GlbCleanup deletes it). The walkable bridge is
-## scripts/structures/wooden_bridge.gd, which builds its own collision.
+## Bridges now live in the terrain .blend (placed by hand) and ship in the GLB.
+## They get walkable trimesh collision here via the "Bridge_" prefix; the old
+## runtime prop bridge (wooden_bridge.gd) is gone.
 
 const MAX_STRUCTURE_SHAPES := 128
 

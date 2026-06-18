@@ -30,7 +30,15 @@ var _last_ground := 0.0
 var _ground_warnings := 0
 
 
+## Disabled: the corral fence is now baked into the terrain .blend as
+## "Corral_Fence_Baked" (editable in Blender) and ships in the GLB.
+## terrain_collision.gd gives it collision via the "Corral_Fence" prefix.
+const ENABLED := false
+
+
 func _ready() -> void:
+	if not ENABLED:
+		return
 	if fence_glb == null:
 		push_error("FenceBuilder: fence_glb not set")
 		return

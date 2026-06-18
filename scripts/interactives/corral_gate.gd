@@ -17,6 +17,8 @@ extends Area3D
 
 const POST := Vector3(0.45, 2.1, 0.45)
 const LEAF_H := 1.45
+## Posts now live in the terrain .blend; only the swinging leaves are runtime.
+const BUILD_POSTS := false
 
 var is_open := false
 var _doors: Array[Node3D] = []
@@ -63,24 +65,25 @@ func _build_gate() -> void:
 	_door_shapes.clear()
 	_closed_rot.clear()
 
-	# frame posts with collision
-	var frame := StaticBody3D.new()
-	frame.name = "GateFrame"
-	frame.collision_layer = 2
-	frame.collision_mask = 0
-	add_child(frame)
-	for it in [["LeftPost", 0.0], ["RightPost", gate_width]]:
-		var z: float = it[1]
-		_box(self, it[0], POST, Vector3(0, POST.y * 0.5, z), _wood)
-		# small cap on top of each post
-		_box(self, String(it[0]) + "_Cap", Vector3(0.55, 0.1, 0.55),
-			Vector3(0, POST.y + 0.05, z), _wood_dark)
-		var cs := CollisionShape3D.new()
-		var sh := BoxShape3D.new()
-		sh.size = POST
-		cs.shape = sh
-		cs.position = Vector3(0, POST.y * 0.5, z)
-		frame.add_child(cs)
+	# Posts are baked into the terrain .blend ("Corral_GatePost_Baked") with
+	# collision via terrain_collision; only the swinging leaves stay runtime.
+	if BUILD_POSTS:
+		var frame := StaticBody3D.new()
+		frame.name = "GateFrame"
+		frame.collision_layer = 2
+		frame.collision_mask = 0
+		add_child(frame)
+		for it in [["LeftPost", 0.0], ["RightPost", gate_width]]:
+			var z: float = it[1]
+			_box(self, it[0], POST, Vector3(0, POST.y * 0.5, z), _wood)
+			_box(self, String(it[0]) + "_Cap", Vector3(0.55, 0.1, 0.55),
+				Vector3(0, POST.y + 0.05, z), _wood_dark)
+			var cs := CollisionShape3D.new()
+			var sh := BoxShape3D.new()
+			sh.size = POST
+			cs.shape = sh
+			cs.position = Vector3(0, POST.y * 0.5, z)
+			frame.add_child(cs)
 
 	# two leaves: L hinged at the left (z=0) post opening towards +Z,
 	# R hinged at the right (z=gate_width) post opening towards -Z
@@ -89,12 +92,12 @@ func _build_gate() -> void:
 	_make_leaf("GateDoor_R", gate_width - 0.28, -1.0, leaf_len)
 
 	# interaction volume covering the whole opening
-	var interact := CollisionShape3D.new()
+	var interact_area := CollisionShape3D.new()
 	var ibox := BoxShape3D.new()
 	ibox.size = Vector3(2.6, 2.2, gate_width + 1.2)
-	interact.shape = ibox
-	interact.position = Vector3(0, 1.1, gate_width * 0.5)
-	add_child(interact)
+	interact_area.shape = ibox
+	interact_area.position = Vector3(0, 1.1, gate_width * 0.5)
+	add_child(interact_area)
 
 
 ## One swinging leaf. hinge_z: pivot position; dir: +1 leaf grows +Z, -1 grows -Z.
