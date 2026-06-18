@@ -287,7 +287,7 @@ func drop(drop_position: Vector3) -> void:
 	snap_to_ground()
 
 
-func register_in_corral() -> void:
+func register_in_corral(resident_position: Vector3, play_sound: bool = true) -> void:
 	if collected:
 		return
 	collected = true
@@ -295,9 +295,12 @@ func register_in_corral() -> void:
 	_follow_target = null
 	monitoring = false
 	monitorable = false
-	AudioManager.play_animal_sfx(animal_kind, -3.0)
-	hide()
-	call_deferred("queue_free")
+	global_position = resident_position
+	_wander_target = resident_position
+	snap_to_ground()
+	_update_animation(&"idle")
+	if play_sound:
+		AudioManager.play_animal_sfx(animal_kind, -3.0)
 
 
 func _on_body_entered(body: Node3D) -> void:

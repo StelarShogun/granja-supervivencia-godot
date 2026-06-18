@@ -150,6 +150,8 @@ func start_new_game() -> void:
 func continue_game(data: Dictionary) -> void:
 	SaveManager.game_mode = int(data.get("game_mode", SaveManager.game_mode))
 	start_new_game()
+	_clear_animals()
+	_spawned_animals.clear()
 	animals_in_corral = int(data.get("animals_in_corral", 0))
 	current_progress = int(data.get("current_progress", 1))
 	elapsed_time = float(data.get("elapsed_time", 0.0))
@@ -159,6 +161,7 @@ func continue_game(data: Dictionary) -> void:
 	_used_spawn_indices.clear()
 	for i in mini(animals_in_corral, 10):
 		_used_spawn_indices[i] = true
+	_restore_corral_animals()
 
 	var player := get_node_or_null(player_path)
 	if player != null:
@@ -289,6 +292,22 @@ func spawn_animals() -> void:
 
 func spawn_animals_for_progress() -> void:
 	spawn_animals()
+
+
+func _restore_corral_animals() -> void:
+	var container := get_node_or_null(animal_container_path)
+	var corral := get_node_or_null(corral_zone_path)
+	if container == null or corral == null or not corral.has_method("place_animal"):
+		return
+	for i in mini(animals_in_corral, ANIMAL_GOAL):
+		var scene := animal_scene
+		if not animal_species_scenes.is_empty():
+			scene = animal_species_scenes[i % animal_species_scenes.size()]
+		var resident := scene.instantiate()
+		resident.name = "CorralResident_%02d" % (i + 1)
+		resident.set("game_manager_path", NodePath("../../GameManager"))
+		container.add_child(resident)
+		corral.place_animal(resident, i, false)
 
 
 func spawn_diablo_after_delay(request_id: int = 0) -> void:
