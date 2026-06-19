@@ -109,7 +109,10 @@ const EXCLUSIONS := [
 	Vector3(29.65, -30.5, 5.0), Vector3(14.0, -6.0, 5.0),
 	Vector3(-22.0, 28.0, 5.0),     # mud traps
 	Vector3(95.0, -70.0, 4.0), Vector3(118.0, -100.0, 4.0),
-	Vector3(105.0, -115.0, 4.0),   # caciques
+	Vector3(105.0, -115.0, 4.0), Vector3(30.0, -44.0, 4.0),
+	Vector3(-118.0, -84.0, 4.0), Vector3(-160.0, -128.0, 4.0),
+	Vector3(-200.0, -78.0, 4.0), Vector3(67.0, 130.0, 4.0),
+	Vector3(96.0, 185.0, 4.0), Vector3(132.0, 152.0, 4.0), # caciques
 	Vector3(128.5, 207.4, 7.0),    # cave trigger
 ]
 

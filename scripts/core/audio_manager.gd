@@ -38,6 +38,7 @@ const SFX_HURT          := "res://assets/audio/sfx/dano.wav"
 const SFX_VICTORY       := "res://assets/audio/sfx/victoria.wav"
 const SFX_DEFEAT        := "res://assets/audio/sfx/derrota.wav"
 const SFX_DIABLO        := "res://assets/audio/sfx/diablo_sound.wav"
+const SFX_DIABLO_ROAR   := "res://assets/audio/sfx/diablo_roar.wav"
 
 const SFX_ANIMALS := {
 	"vaca":    "res://assets/audio/sfx/vaca.mp3",
@@ -210,6 +211,11 @@ func play_defeat() -> void:
 ## para que "se escuche a lo lejos"; la llamada controla el volumen.
 func play_diablo_cue(volume_db: float = -16.0) -> void:
 	_play_one_shot(SFX_DIABLO, volume_db)
+
+
+## Rugido global al aparecer: no es 3D, se oye igual en todo el mapa.
+func play_diablo_spawn_roar() -> void:
+	_play_one_shot(SFX_DIABLO_ROAR, 12.0)
 
 
 ## Portón del corral.

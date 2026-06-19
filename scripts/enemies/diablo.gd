@@ -268,7 +268,13 @@ func receive_machete_strike(amount: float) -> bool:
 	if _health <= 0.0:
 		_begin_dying()
 		if manager != null and manager.has_method("show_message"):
-			manager.show_message("El Diablo cayó derrotado por el machete.", 3.0)
+			var respawn_delay := -1.0
+			if manager.has_method("register_diablo_defeated_by_machete"):
+				respawn_delay = float(manager.register_diablo_defeated_by_machete())
+			if respawn_delay > 0.0:
+				manager.show_message("El Diablo cayó. Revive en %d segundos." % int(respawn_delay), 3.0)
+			else:
+				manager.show_message("El Diablo cayó derrotado por el machete.", 3.0)
 		return true
 	_play_voice(SFX_HURT)
 	if manager != null and manager.has_method("show_message"):

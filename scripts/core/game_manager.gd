@@ -40,6 +40,9 @@ const RESPAWN_HP_COST := 25.0
 	preload("res://scenes/animals/animal_horse.tscn"),
 ]
 @export var diablo_spawn_delay: float = 60.0
+@export var diablo_respawn_delay_easy: float = 60.0
+@export var diablo_respawn_delay_normal: float = 30.0
+@export var diablo_respawn_delay_hard: float = 15.0
 @export var autosave_enabled: bool = true
 @export var diablo_timer_enabled: bool = true
 
@@ -47,6 +50,7 @@ var game_started: bool = false
 var game_over: bool = false
 var victory: bool = false
 var diablo_spawned: bool = false
+var diablo_respawn_due_time: float = -1.0
 var player_in_safe_zone: bool = false
 var player_entered_cave: bool = false
 var elapsed_time: float = 0.0
@@ -74,6 +78,9 @@ func _process(delta: float) -> void:
 	if game_started and not game_over and not get_tree().paused:
 		elapsed_time += delta
 		_save_accumulator += delta
+		if diablo_respawn_due_time >= 0.0 and not diablo_spawned and elapsed_time >= diablo_respawn_due_time:
+			diablo_respawn_due_time = -1.0
+			spawn_diablo()
 		if _save_accumulator >= AUTOSAVE_INTERVAL:
 			_save_accumulator = 0.0
 			save_current_game()
@@ -113,6 +120,7 @@ func start_new_game() -> void:
 	game_over = false
 	victory = false
 	diablo_spawned = false
+	diablo_respawn_due_time = -1.0
 	player_in_safe_zone = false
 	player_entered_cave = false
 	elapsed_time = 0.0
@@ -165,6 +173,7 @@ func continue_game(data: Dictionary) -> void:
 	current_progress = int(data.get("current_progress", 1))
 	elapsed_time = float(data.get("elapsed_time", 0.0))
 	diablo_spawned = bool(data.get("diablo_spawned", false))
+	diablo_respawn_due_time = float(data.get("diablo_respawn_due_time", -1.0))
 	player_entered_cave = bool(data.get("player_entered_cave", false))
 	player_in_safe_zone = false
 	_used_spawn_indices.clear()
@@ -194,7 +203,11 @@ func continue_game(data: Dictionary) -> void:
 
 	update_progression(false)
 	spawn_animals()
-	if diablo_spawned or elapsed_time >= diablo_spawn_delay:
+	if diablo_respawn_due_time >= 0.0 and not diablo_spawned:
+		var diablo := get_node_or_null(diablo_path)
+		_prepare_diablo_hidden(diablo)
+		_spawn_request_id += 1
+	elif diablo_spawned or elapsed_time >= diablo_spawn_delay:
 		spawn_diablo(false)
 	else:
 		var diablo := get_node_or_null(diablo_path)
@@ -391,6 +404,7 @@ func spawn_diablo(show_alert: bool = true) -> void:
 	_update_diablo_safe_state()
 
 	diablo_spawned = true
+	diablo_respawn_due_time = -1.0
 	if DEBUG_DIABLO_SPAWN and diablo is Node3D:
 		print("[QA-DIABLO] final=%v active=%s visible=%s" % [
 			(diablo as Node3D).global_position,
@@ -398,11 +412,23 @@ func spawn_diablo(show_alert: bool = true) -> void:
 			str((diablo as Node3D).visible),
 		])
 	if show_alert:
+		AudioManager.play_diablo_spawn_roar()
 		var ui := get_node_or_null(ui_path)
 		if ui != null and ui.has_method("show_center_alert"):
 			ui.show_center_alert("¡El Diablo ha aparecido!", 4.0)
 		show_message("El Diablo bajó de la montaña. Mantente lejos.", 4.0)
 	save_current_game()
+
+
+func register_diablo_defeated_by_machete() -> float:
+	if not game_started or game_over:
+		return -1.0
+	var delay := _diablo_respawn_delay()
+	diablo_spawned = false
+	diablo_respawn_due_time = elapsed_time + delay
+	_spawn_request_id += 1
+	save_current_game()
+	return delay
 
 
 ## Metas de animales acumuladas por nivel de progresión, según el modo. El
@@ -425,6 +451,16 @@ func _active_animal_target() -> int:
 	var targets := _progress_targets()
 	var idx := clampi(current_progress - 1, 0, targets.size() - 1)
 	return int(targets[idx])
+
+
+func _diablo_respawn_delay() -> float:
+	match SaveManager.game_mode:
+		SaveManager.MODE_EASY:
+			return diablo_respawn_delay_easy
+		SaveManager.MODE_HARD:
+			return diablo_respawn_delay_hard
+		_:
+			return diablo_respawn_delay_normal
 
 
 func _next_available_spawn_index(marker_count: int) -> int:
@@ -594,6 +630,7 @@ func save_current_game() -> void:
 		"player_position": player_position,
 		"elapsed_time": elapsed_time,
 		"diablo_spawned": diablo_spawned,
+		"diablo_respawn_due_time": diablo_respawn_due_time,
 		"player_entered_cave": player_entered_cave,
 	})
 
