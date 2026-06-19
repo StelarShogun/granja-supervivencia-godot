@@ -25,6 +25,19 @@ shape = SubResource("CapsuleShape3D_diablo")
 [node name="diablo" parent="Visual" unique_id=1776177006 instance=ExtResource("2_0qpmw")]
 transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, 0, 0, 0)
 
+[node name="Voice" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+unit_size = 6.0
+max_distance = 50.0
+bus = &"Master"
+
+[node name="Steps" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+volume_db = -6.0
+unit_size = 4.0
+max_distance = 32.0
+bus = &"Master"
+
 [node name="HitBox" type="Area3D" parent="." unique_id=1259634098]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
 collision_layer = 4

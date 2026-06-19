@@ -17,6 +17,7 @@ const STRUCTURE_PREFIXES := [
 	"Corral_GatePost",
 	"Cave_Lip",
 	"Bridge_",
+	"Crater_",
 ]
 ## Bridges now live in the terrain .blend (placed by hand) and ship in the GLB.
 ## They get walkable trimesh collision here via the "Bridge_" prefix; the old

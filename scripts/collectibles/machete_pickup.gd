@@ -9,6 +9,11 @@ func _ready() -> void:
 	collision_mask = 1
 
 
+## Texto de la pista contextual que muestra el HUD al estar en rango.
+func get_interaction_prompt() -> String:
+	return "Presiona E para tomar el machete"
+
+
 func interact(player: Node) -> void:
 	if not player.has_method("equip_machete"):
 		return
@@ -22,7 +27,7 @@ func interact(player: Node) -> void:
 	AudioManager.play_pickup()
 	var manager2 := _get_game_manager()
 	if manager2 != null and manager2.has_method("show_message"):
-		manager2.show_message("Machete del cráter: única arma contra el Diablo.", 2.5)
+		manager2.show_message("Machete equipado: tu única arma contra el Diablo. (Clic izq. / F para atacar)", 3.0)
 	queue_free()
 
 

@@ -88,9 +88,9 @@ func _check_main_nodes(main: Node) -> void:
 		"InteractiveObjects/BridgeTrigger",
 		"InteractiveObjects/CaveTrigger",
 		"InteractiveObjects/Cacique_01",
-		"UI/TopLeft/HealthContent/HealthBar",
-		"UI/TopRight/ObjectivePanel/Content/AnimalRow/LabelAnimals",
-		"UI/OxygenPanel/OxygenContent/OxygenBar",
+		"UI/HealthPanel/HealthContent/HealthRow/HealthBar",
+		"UI/ObjectivePanel/Content/AnimalRow/LabelAnimals",
+		"UI/ObjectivePanel/Content/LabelMachete",
 		"PauseMenu",
 		"DefeatScreen",
 		"VictoryScreen",
@@ -136,7 +136,7 @@ func _check_runtime_mechanics(main: Node) -> void:
 	_check(float(diablo.get("chase_speed")) == 5.0, "Diablo speed is 5.0 at progress 1")
 
 	var ui := main.get_node("UI")
-	for method in ["set_health", "set_animals", "set_progress", "set_message", "set_oxygen", "show_oxygen_bar"]:
+	for method in ["set_health", "set_animals", "set_progress", "set_message", "set_machete", "show_center_alert"]:
 		_check(ui.has_method(method), "HUD has %s" % method)
 
 	_check(main.has_node("DayNightBridge"), "day night bridge exists")

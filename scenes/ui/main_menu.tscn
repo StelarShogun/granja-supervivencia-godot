@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://d0pyvo8rbj0fm"]
+[gd_scene format=3 uid="uid://d0pyvo8rbj0fm"]
 
 [ext_resource type="Script" uid="uid://dc8fclrkovxuf" path="res://scripts/ui/main_menu.gd" id="1_menu_script"]
 [ext_resource type="Theme" uid="uid://dcxpea3oecmfg" path="res://assets/ui/finca_theme.tres" id="2_theme"]
@@ -6,6 +6,10 @@
 [ext_resource type="Texture2D" uid="uid://beiaj1080xy7h" path="res://assets/ui/game_logo.png" id="4_logo"]
 
 [sub_resource type="StyleBoxFlat" id="panel_discrete"]
+content_margin_left = 22.0
+content_margin_top = 18.0
+content_margin_right = 22.0
+content_margin_bottom = 18.0
 bg_color = Color(0.07, 0.045, 0.028, 0.58)
 border_width_left = 1
 border_width_top = 1
@@ -16,14 +20,10 @@ corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
-content_margin_left = 22.0
-content_margin_top = 18.0
-content_margin_right = 22.0
-content_margin_bottom = 18.0
 shadow_color = Color(0, 0, 0, 0.25)
 shadow_size = 8
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1852934437]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -33,7 +33,7 @@ grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_menu_script")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=519710447]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -44,7 +44,7 @@ texture = ExtResource("3_background")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Overlay" type="ColorRect" parent="."]
+[node name="Overlay" type="ColorRect" parent="." unique_id=274593961]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -53,7 +53,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.05, 0.03, 0.02, 0.22)
 
-[node name="Logo" type="TextureRect" parent="."]
+[node name="Logo" type="TextureRect" parent="." unique_id=1032958854]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -68,7 +68,7 @@ texture = ExtResource("4_logo")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Layout" type="MarginContainer" parent="."]
+[node name="Layout" type="MarginContainer" parent="." unique_id=75774495]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -80,93 +80,93 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
-[node name="VBox" type="VBoxContainer" parent="Layout"]
+[node name="VBox" type="VBoxContainer" parent="Layout" unique_id=1437534016]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TopSpacer" type="Control" parent="Layout/VBox"]
+[node name="TopSpacer" type="Control" parent="Layout/VBox" unique_id=1513160043]
 layout_mode = 2
 size_flags_vertical = 3
 size_flags_stretch_ratio = 1.3
 
-[node name="MainPanel" type="PanelContainer" parent="Layout/VBox"]
+[node name="MainPanel" type="PanelContainer" parent="Layout/VBox" unique_id=1871754171]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_styles/panel = SubResource("panel_discrete")
 
-[node name="Buttons" type="VBoxContainer" parent="Layout/VBox/MainPanel"]
+[node name="Buttons" type="VBoxContainer" parent="Layout/VBox/MainPanel" unique_id=2097453543]
 layout_mode = 2
 theme_override_constants/separation = 14
 alignment = 1
 
-[node name="ContinueButton" type="Button" parent="Layout/VBox/MainPanel/Buttons"]
+[node name="ContinueButton" type="Button" parent="Layout/VBox/MainPanel/Buttons" unique_id=697028658]
 custom_minimum_size = Vector2(400, 54)
 layout_mode = 2
 text = "Continuar partida"
 
-[node name="NewGameButton" type="Button" parent="Layout/VBox/MainPanel/Buttons"]
+[node name="NewGameButton" type="Button" parent="Layout/VBox/MainPanel/Buttons" unique_id=1159486836]
 custom_minimum_size = Vector2(400, 54)
 layout_mode = 2
 text = "Nueva partida"
 
-[node name="LoadPanel" type="PanelContainer" parent="Layout/VBox"]
+[node name="LoadPanel" type="PanelContainer" parent="Layout/VBox" unique_id=300858833]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="VBox" type="VBoxContainer" parent="Layout/VBox/LoadPanel"]
+[node name="VBox" type="VBoxContainer" parent="Layout/VBox/LoadPanel" unique_id=303502619]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="Layout/VBox/LoadPanel/VBox"]
+[node name="Title" type="Label" parent="Layout/VBox/LoadPanel/VBox" unique_id=565357914]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Cargar partida"
 horizontal_alignment = 1
 
-[node name="SlotList" type="VBoxContainer" parent="Layout/VBox/LoadPanel/VBox"]
+[node name="SlotList" type="VBoxContainer" parent="Layout/VBox/LoadPanel/VBox" unique_id=1239775879]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="BackButton" type="Button" parent="Layout/VBox/LoadPanel/VBox"]
+[node name="BackButton" type="Button" parent="Layout/VBox/LoadPanel/VBox" unique_id=1359092846]
 custom_minimum_size = Vector2(380, 44)
 layout_mode = 2
 text = "Volver"
 
-[node name="DifficultyPanel" type="PanelContainer" parent="Layout/VBox"]
+[node name="DifficultyPanel" type="PanelContainer" parent="Layout/VBox" unique_id=1347216479]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="VBox" type="VBoxContainer" parent="Layout/VBox/DifficultyPanel"]
+[node name="VBox" type="VBoxContainer" parent="Layout/VBox/DifficultyPanel" unique_id=562138118]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Layout/VBox/DifficultyPanel/VBox"]
+[node name="Title" type="Label" parent="Layout/VBox/DifficultyPanel/VBox" unique_id=957996551]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Elige la dificultad"
 horizontal_alignment = 1
 
-[node name="EasyButton" type="Button" parent="Layout/VBox/DifficultyPanel/VBox"]
+[node name="EasyButton" type="Button" parent="Layout/VBox/DifficultyPanel/VBox" unique_id=817772952]
 custom_minimum_size = Vector2(520, 48)
 layout_mode = 2
 text = "Fácil"
 
-[node name="EasyDesc" type="Label" parent="Layout/VBox/DifficultyPanel/VBox"]
+[node name="EasyDesc" type="Label" parent="Layout/VBox/DifficultyPanel/VBox" unique_id=2096953911]
 custom_minimum_size = Vector2(520, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.78, 0.62, 1)
 theme_override_font_sizes/font_size = 14
-text = "Para jugadores que quieren explorar la finca con menor presión. El Diablo es más lento, hay más tiempo para recolectar animales y el castigo por ser alcanzado es más suave."
+text = "Para jugadores que quieren explorar la finca con menor presión. Hay que reunir menos animales (meta más corta y menos progresiones), el Diablo es más lento y tarda más en aparecer, y el castigo por ser alcanzado es más suave."
 autowrap_mode = 3
 
-[node name="NormalButton" type="Button" parent="Layout/VBox/DifficultyPanel/VBox"]
+[node name="NormalButton" type="Button" parent="Layout/VBox/DifficultyPanel/VBox" unique_id=432465790]
 custom_minimum_size = Vector2(520, 48)
 layout_mode = 2
 text = "Normal"
 
-[node name="NormalDesc" type="Label" parent="Layout/VBox/DifficultyPanel/VBox"]
+[node name="NormalDesc" type="Label" parent="Layout/VBox/DifficultyPanel/VBox" unique_id=1632010347]
 custom_minimum_size = Vector2(520, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.78, 0.62, 1)
@@ -174,12 +174,12 @@ theme_override_font_sizes/font_size = 14
 text = "Experiencia equilibrada. El Diablo persigue a velocidad estándar, la cantidad de animales es variable y el jugador debe administrar bien el tiempo y la ruta."
 autowrap_mode = 3
 
-[node name="HardButton" type="Button" parent="Layout/VBox/DifficultyPanel/VBox"]
+[node name="HardButton" type="Button" parent="Layout/VBox/DifficultyPanel/VBox" unique_id=781510315]
 custom_minimum_size = Vector2(520, 48)
 layout_mode = 2
 text = "Difícil"
 
-[node name="HardDesc" type="Label" parent="Layout/VBox/DifficultyPanel/VBox"]
+[node name="HardDesc" type="Label" parent="Layout/VBox/DifficultyPanel/VBox" unique_id=1769081457]
 custom_minimum_size = Vector2(520, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.78, 0.62, 1)
@@ -187,41 +187,41 @@ theme_override_font_sizes/font_size = 14
 text = "Modo de alta tensión. El Diablo es más rápido, los animales aparecen más dispersos y el jugador debe reaccionar rápido para evitar ser alcanzado tres veces."
 autowrap_mode = 3
 
-[node name="BackButton" type="Button" parent="Layout/VBox/DifficultyPanel/VBox"]
+[node name="BackButton" type="Button" parent="Layout/VBox/DifficultyPanel/VBox" unique_id=336433453]
 custom_minimum_size = Vector2(380, 44)
 layout_mode = 2
 text = "Volver"
 
-[node name="SlotSelectPanel" type="PanelContainer" parent="Layout/VBox"]
+[node name="SlotSelectPanel" type="PanelContainer" parent="Layout/VBox" unique_id=1663238806]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="VBox" type="VBoxContainer" parent="Layout/VBox/SlotSelectPanel"]
+[node name="VBox" type="VBoxContainer" parent="Layout/VBox/SlotSelectPanel" unique_id=203043323]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Title" type="Label" parent="Layout/VBox/SlotSelectPanel/VBox"]
+[node name="Title" type="Label" parent="Layout/VBox/SlotSelectPanel/VBox" unique_id=721147383]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Elige un slot para guardar"
 horizontal_alignment = 1
 
-[node name="SlotList" type="VBoxContainer" parent="Layout/VBox/SlotSelectPanel/VBox"]
+[node name="SlotList" type="VBoxContainer" parent="Layout/VBox/SlotSelectPanel/VBox" unique_id=1393568175]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="BackButton" type="Button" parent="Layout/VBox/SlotSelectPanel/VBox"]
+[node name="BackButton" type="Button" parent="Layout/VBox/SlotSelectPanel/VBox" unique_id=392950108]
 custom_minimum_size = Vector2(380, 44)
 layout_mode = 2
 text = "Volver"
 
-[node name="BottomSpacer" type="Control" parent="Layout/VBox"]
+[node name="BottomSpacer" type="Control" parent="Layout/VBox" unique_id=1998275586]
 layout_mode = 2
 size_flags_vertical = 3
 size_flags_stretch_ratio = 0.7
 
-[node name="ConfirmOverwrite" type="Control" parent="."]
+[node name="ConfirmOverwrite" type="Control" parent="." unique_id=1330549246]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -230,7 +230,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Dim" type="ColorRect" parent="ConfirmOverwrite"]
+[node name="Dim" type="ColorRect" parent="ConfirmOverwrite" unique_id=1620460907]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -239,7 +239,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.55)
 
-[node name="Panel" type="PanelContainer" parent="ConfirmOverwrite"]
+[node name="Panel" type="PanelContainer" parent="ConfirmOverwrite" unique_id=1363408109]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -253,12 +253,12 @@ offset_bottom = 110.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="ConfirmOverwrite/Panel"]
+[node name="VBox" type="VBoxContainer" parent="ConfirmOverwrite/Panel" unique_id=254335980]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="Message" type="Label" parent="ConfirmOverwrite/Panel/VBox"]
+[node name="Message" type="Label" parent="ConfirmOverwrite/Panel/VBox" unique_id=2075395679]
 custom_minimum_size = Vector2(440, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
@@ -267,17 +267,17 @@ text = "Este slot ya tiene una partida guardada.
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Buttons" type="HBoxContainer" parent="ConfirmOverwrite/Panel/VBox"]
+[node name="Buttons" type="HBoxContainer" parent="ConfirmOverwrite/Panel/VBox" unique_id=1714239181]
 layout_mode = 2
 theme_override_constants/separation = 14
 alignment = 1
 
-[node name="YesButton" type="Button" parent="ConfirmOverwrite/Panel/VBox/Buttons"]
+[node name="YesButton" type="Button" parent="ConfirmOverwrite/Panel/VBox/Buttons" unique_id=1098747758]
 custom_minimum_size = Vector2(200, 46)
 layout_mode = 2
 text = "Sí, sobrescribir"
 
-[node name="CancelButton" type="Button" parent="ConfirmOverwrite/Panel/VBox/Buttons"]
+[node name="CancelButton" type="Button" parent="ConfirmOverwrite/Panel/VBox/Buttons" unique_id=749671059]
 custom_minimum_size = Vector2(160, 46)
 layout_mode = 2
 text = "Cancelar"

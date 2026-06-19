@@ -45,7 +45,29 @@ const DIABLO_MAX_HEALTH := 100.0
 const LOOPING_ANIMATIONS: Array[StringName] = [&"Idle", &"Walk", &"Run"]
 const ATTACK_ANIMATIONS: Array[StringName] = [&"Attack", &"Attack_2", &"Attack_3"]
 
+## SFX posicionales del Diablo (placeholders sintetizados, reemplazables).
+const SFX_ROAR := "res://assets/audio/sfx/diablo_roar.wav"
+const SFX_ATTACK := "res://assets/audio/sfx/diablo_attack.wav"
+const SFX_MAGIC := "res://assets/audio/sfx/diablo_magic.wav"
+const SFX_HURT := "res://assets/audio/sfx/diablo_hurt.wav"
+const SFX_DEATH := "res://assets/audio/sfx/diablo_death.wav"
+const SFX_STEPS := "res://assets/audio/sfx/diablo_steps.wav"
+## Aviso del Diablo: al aparecer (lejano) y al acercarse al jugador.
+const SFX_DIABLO := "res://assets/audio/sfx/diablo_sound.wav"
+
+## Distancia a la que dispara el aviso de acercamiento.
+@export var proximity_range: float = 22.0
+## Velocidad de giro del modelo hacia la dirección de avance.
+@export var rotation_speed: float = 9.0
+
+## Histéresis/cooldown del aviso de proximidad (evita loop al quedar cerca).
+var _proximity_armed: bool = true
+var _proximity_cooldown: float = 0.0
+
 @onready var _hit_box: Area3D = $HitBox
+@onready var _voice: AudioStreamPlayer3D = $Voice
+@onready var _steps: AudioStreamPlayer3D = $Steps
+@onready var _visual: Node3D = $Visual
 
 
 func _ready() -> void:
@@ -54,6 +76,7 @@ func _ready() -> void:
 	chase_speed = speed_normal.x
 	_animation_player = _find_animation_player($Visual)
 	_setup_animation_player()
+	_setup_audio()
 	_hit_box.body_entered.connect(_on_hit_box_body_entered)
 	deactivate()
 
@@ -66,6 +89,8 @@ func _physics_process(delta: float) -> void:
 		_cooldown_left -= delta
 	if _freeze_cooldown_left > 0.0:
 		_freeze_cooldown_left -= delta
+	if _proximity_cooldown > 0.0:
+		_proximity_cooldown -= delta
 	if _action_locked:
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -99,6 +124,8 @@ func _physics_process(delta: float) -> void:
 		elif night and _daylight_hidden:
 			_daylight_hidden = false
 			show()
+			_play_action_animation(&"Roaring")
+			_play_voice(SFX_ROAR)
 		if not night:
 			velocity.x = 0.0
 			velocity.z = 0.0
@@ -119,6 +146,7 @@ func _physics_process(delta: float) -> void:
 
 	# Magic freeze
 	var dist := global_position.distance_to(player.global_position)
+	_update_proximity_cue(dist)
 	if dist < freeze_range and _freeze_cooldown_left <= 0.0:
 		var hard := SaveManager.game_mode == SaveManager.MODE_HARD
 		var dur := freeze_duration_kojima if hard else freeze_duration_normal
@@ -129,6 +157,7 @@ func _physics_process(delta: float) -> void:
 		if player.has_method("apply_freeze"):
 			player.apply_freeze(dur)
 			_freeze_cooldown_left = cd
+			_play_voice(SFX_MAGIC)
 			if manager != null and manager.has_method("show_message"):
 				manager.show_message("El Diablo usó magia oscura. ¡Paralizado!", dur)
 
@@ -139,7 +168,7 @@ func _physics_process(delta: float) -> void:
 		direction = direction.normalized()
 		velocity.x = direction.x * chase_speed
 		velocity.z = direction.z * chase_speed
-		look_at(global_position + direction, Vector3.UP)
+		_face_direction(direction, delta)
 		_play_locomotion_animation()
 	else:
 		velocity.x = 0.0
@@ -195,6 +224,12 @@ func activate() -> void:
 	_action_locked = false
 	_reset_after_attack = false
 	reset_health()
+	_proximity_armed = true
+	_proximity_cooldown = 0.0
+	_face_player_instant()
+	# Aparición: aviso global tenue, se escucha "a lo lejos" aunque el Diablo
+	# esté lejos del jugador (el sonido posicional no se oiría a esa distancia).
+	AudioManager.play_diablo_cue(-18.0)
 	set_physics_process(true)
 	if _hit_box != null:
 		_hit_box.monitoring = true
@@ -206,6 +241,7 @@ func activate() -> void:
 		_daylight_hidden = false
 		show()
 		_play_action_animation(&"Roaring")
+		_play_voice(SFX_ROAR)
 
 
 func deactivate() -> void:
@@ -216,6 +252,7 @@ func deactivate() -> void:
 	_daylight_hidden = false
 	hide()
 	velocity = Vector3.ZERO
+	_set_steps(false)
 	_stop_all_animation()
 	set_physics_process(false)
 	if _hit_box != null:
@@ -233,6 +270,7 @@ func receive_machete_strike(amount: float) -> bool:
 		if manager != null and manager.has_method("show_message"):
 			manager.show_message("El Diablo cayó derrotado por el machete.", 3.0)
 		return true
+	_play_voice(SFX_HURT)
 	if manager != null and manager.has_method("show_message"):
 		manager.show_message("El Diablo recibió daño. Vida restante: %.0f." % _health, 1.5)
 	return true
@@ -269,6 +307,7 @@ func _on_hit_box_body_entered(body: Node3D) -> void:
 			manager.show_message("El Diablo te alcanzó.", 1.7)
 		_reset_after_attack = true
 		var attack := ATTACK_ANIMATIONS[randi_range(0, ATTACK_ANIMATIONS.size() - 1)]
+		_play_voice(SFX_ATTACK)
 		if not _play_action_animation(attack):
 			_reset_after_attack = false
 			reset_position()
@@ -292,10 +331,12 @@ func _setup_animation_player() -> void:
 
 func _play_locomotion_animation() -> void:
 	var animation_name := &"Run" if chase_speed >= run_animation_speed_threshold else &"Walk"
+	_set_steps(true)
 	_play_animation(animation_name, false)
 
 
 func _play_action_animation(animation_name: StringName) -> bool:
+	_set_steps(false)
 	return _play_animation(animation_name, true)
 
 
@@ -314,6 +355,7 @@ func _play_animation(animation_name: StringName, lock_action: bool) -> bool:
 
 
 func _play_idle_animation() -> void:
+	_set_steps(false)
 	if _action_locked or _dying:
 		return
 	_play_animation(&"Idle", false)
@@ -325,6 +367,77 @@ func _stop_all_animation() -> void:
 	_current_animation = &""
 
 
+func _setup_audio() -> void:
+	# Steps son un golpe corto en bucle, encendido/apagado mientras camina.
+	if _steps != null:
+		var stream := load(SFX_STEPS)
+		if stream is AudioStreamWAV:
+			var looped := (stream as AudioStreamWAV).duplicate() as AudioStreamWAV
+			looped.loop_mode = AudioStreamWAV.LOOP_FORWARD
+			looped.loop_begin = 0
+			looped.loop_end = looped.data.size() / 2  # 16-bit mono → 2 bytes/frame
+			_steps.stream = looped
+
+
+## Reproduce una voz one-shot posicional (rugido, ataque, magia, daño, muerte).
+func _play_voice(path: String) -> void:
+	if _voice == null:
+		return
+	var stream := load(path)
+	if stream is AudioStream:
+		_voice.stream = stream
+		_voice.play()
+
+
+## Enciende o apaga el bucle de pasos según el movimiento.
+func _set_steps(active: bool) -> void:
+	if _steps == null or _steps.stream == null:
+		return
+	if active and visible:
+		_steps.pitch_scale = 1.25 if chase_speed >= run_animation_speed_threshold else 1.0
+		if not _steps.playing:
+			_steps.play()
+	elif _steps.playing:
+		_steps.stop()
+
+
+## Orienta el modelo (Visual) hacia la dirección de avance. El modelo del GLB
+## mira hacia +Z (igual que el jugador), por eso se gira el nodo Visual con
+## atan2(x, z) en vez de look_at() sobre el cuerpo, que invertía la orientación
+## y hacía que las animaciones se vieran al revés.
+func _face_direction(direction: Vector3, delta: float, instant: bool = false) -> void:
+	if _visual == null or direction.length_squared() < 1e-4:
+		return
+	var target_yaw := atan2(direction.x, direction.z)
+	if instant:
+		_visual.rotation.y = target_yaw
+	else:
+		_visual.rotation.y = lerp_angle(_visual.rotation.y, target_yaw, rotation_speed * delta)
+
+
+## Orienta el modelo hacia el jugador de inmediato (al aparecer).
+func _face_player_instant() -> void:
+	var player := _get_player()
+	if player == null:
+		return
+	var d: Vector3 = player.global_position - global_position
+	d.y = 0.0
+	_face_direction(d, 0.0, true)
+
+
+## Aviso sonoro de acercamiento. Suena una vez al entrar en proximidad y se
+## re-arma solo cuando el jugador se aleja (histéresis), de modo que no entra en
+## un loop eterno mientras el Diablo está pegado al jugador.
+func _update_proximity_cue(dist: float) -> void:
+	if dist < proximity_range:
+		if _proximity_armed and _proximity_cooldown <= 0.0:
+			_play_voice(SFX_DIABLO)
+			_proximity_armed = false
+			_proximity_cooldown = 3.0
+	elif dist > proximity_range + 8.0:
+		_proximity_armed = true
+
+
 func _begin_dying() -> void:
 	active = false
 	_dying = true
@@ -332,6 +445,8 @@ func _begin_dying() -> void:
 	_reset_after_attack = false
 	velocity = Vector3.ZERO
 	set_physics_process(false)
+	_set_steps(false)
+	_play_voice(SFX_DEATH)
 	if _hit_box != null:
 		_hit_box.monitoring = false
 		_hit_box.monitorable = false

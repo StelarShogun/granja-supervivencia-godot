@@ -5,9 +5,11 @@ Run via the in-Blender MCP socket. Saves the .blend, hides COL_PropLibrary
 GLB with Y-up + applied modifiers, then restores visibility.
 """
 import bpy
-import functools
+import os
 
-GLB_PATH = "/home/dilan/Documentos/GitHub/granja-supervivencia-godot/assets/models/environment/Terreno_Finca.glb"
+# Export next to the open .blend (Terreno_Finca.blend lives beside Terreno_Finca.glb).
+# Derived from the blend path so it is portable across machines.
+GLB_PATH = os.path.join(os.path.dirname(bpy.data.filepath), "Terreno_Finca.glb")
 
 
 def _find_layer_coll(layer_coll, name):

@@ -11,6 +11,8 @@ const MAX_HEALTH := 100.0
 @export var camera_min_pitch: float = -55.0
 @export var camera_max_pitch: float = 35.0
 @export var invulnerability_time: float = 2.0
+## Destrabe: tiempo que hay que mantener la tecla [R] para volver al inicio.
+@export var respawn_hold_time: float = 1.0
 @export var diablo_damage: float = 34.0
 @export var game_manager_path: NodePath = NodePath("../GameManager")
 @export var jump_velocity: float = 8.0
@@ -45,6 +47,11 @@ const MACHETE_COOLDOWN := 0.85
 const MACHETE_BONE := &"mixamorig_RightHand"
 ## 1 m expressed in this skeleton's bone-local units (forearm ~52 u ≈ 0.25 m).
 const BONE_UNITS_PER_M := 209.0
+## Modelo 3D del machete (mismo GLB para el objeto del mundo y el de la mano).
+const MACHETE_MODEL := preload("res://assets/models/props/machete.glb")
+## Largo del machete en unidades nativas del GLB y largo real deseado en metros.
+const MACHETE_GLB_LENGTH := 73.0
+const MACHETE_REAL_LENGTH_M := 0.55
 const LOOPING_ANIMATIONS: Array[StringName] = [
 	&"Idle",
 	&"Walk",
@@ -56,9 +63,13 @@ const LOOPING_ANIMATIONS: Array[StringName] = [
 ]
 
 var _invulnerability_left: float = 0.0
+## Acumulador del mantener-para-destrabar. -1 = bloqueado hasta soltar la tecla.
+var _respawn_hold: float = 0.0
 var _frozen_left: float = 0.0
 var _mud_slow_left: float = 0.0
 var _interaction_targets: Array[Node] = []
+## Última pista de interacción mostrada (para no actualizar el HUD cada frame).
+var _last_prompt: String = ""
 var _camera_pitch: float = -15.0
 var _run_wind_intensity: float = 0.0
 var _animation_player: AnimationPlayer
@@ -127,6 +138,9 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		_update_animation(Vector2.ZERO)
 		return
+
+	_handle_respawn(delta)
+	_update_interaction_prompt()
 
 	if _frozen_left > 0.0:
 		_run_wind_intensity = 0.0
@@ -224,6 +238,42 @@ func get_health_ratio() -> float:
 	return health / MAX_HEALTH
 
 
+## Destrabe: mantener [R] devuelve al jugador al spawn con costo de vida. El
+## "mantener" evita activaciones accidentales. Se bloquea hasta soltar la tecla
+## para que un solo destrabe no se repita en cadena.
+func _handle_respawn(delta: float) -> void:
+	if not InputMap.has_action("respawn"):
+		return
+	if not Input.is_action_pressed("respawn"):
+		_respawn_hold = 0.0
+		return
+	if _respawn_hold < 0.0:
+		return  # ya se usó este mantener; esperar a soltar
+	_respawn_hold += delta
+	var manager := _get_game_manager()
+	if _respawn_hold < respawn_hold_time:
+		if manager != null and manager.has_method("show_message"):
+			manager.show_message("Mantén [R] para volver al inicio…", 0.3)
+		return
+	_respawn_hold = -1.0
+	if manager != null and manager.has_method("respawn_player_to_spawn"):
+		manager.respawn_player_to_spawn()
+
+
+## Aplica el costo de vida del destrabe. Nunca mata directamente (deja al menos
+## 1 de vida) para que el destrabe no se convierta en un suicidio.
+func apply_respawn_cost(cost: float) -> void:
+	velocity = Vector3.ZERO
+	health = maxf(1.0, health - cost)
+	invulnerable = true
+	_invulnerability_left = invulnerability_time
+	AudioManager.play_player_hurt()
+	_publish_health_ui()
+	var manager := _get_game_manager()
+	if manager != null and manager.has_method("on_player_health_changed"):
+		manager.on_player_health_changed(health, MAX_HEALTH)
+
+
 func apply_freeze(duration: float) -> void:
 	_frozen_left = maxf(_frozen_left, duration)
 
@@ -278,34 +328,18 @@ func _setup_machete() -> void:
 
 
 func _build_machete() -> Node3D:
-	var u := BONE_UNITS_PER_M
 	var holder := Node3D.new()
 	holder.name = "Machete"
-
-	var handle_mat := StandardMaterial3D.new()
-	handle_mat.albedo_color = Color(0.18, 0.12, 0.06)
-	handle_mat.roughness = 1.0
-	var blade_mat := StandardMaterial3D.new()
-	blade_mat.albedo_color = Color(0.72, 0.74, 0.78)
-	blade_mat.metallic = 0.55
-	blade_mat.roughness = 0.35
-
-	# Blade runs along the hand's +Y (toward the fingertips).
-	var handle := MeshInstance3D.new()
-	var hb := BoxMesh.new()
-	hb.size = Vector3(0.035, 0.14, 0.035) * u
-	handle.mesh = hb
-	handle.material_override = handle_mat
-	handle.position = Vector3(0.0, 0.07, 0.0) * u
-	holder.add_child(handle)
-
-	var blade := MeshInstance3D.new()
-	var bb := BoxMesh.new()
-	bb.size = Vector3(0.05, 0.5, 0.012) * u
-	blade.mesh = bb
-	blade.material_override = blade_mat
-	blade.position = Vector3(0.0, 0.39, 0.0) * u
-	holder.add_child(blade)
+	var model := MACHETE_MODEL.instantiate() as Node3D
+	model.name = "MacheteModel"
+	# El GLB tiene la hoja a lo largo de su eje X y la empuñadura hacia +X. Se
+	# escala a tamaño real dentro del espacio del hueso y se rota -90° en Z para
+	# que la hoja apunte hacia +Y (la punta de los dedos), igual que la malla
+	# procedural previa, de modo que siga la animación Attack correctamente.
+	var s := MACHETE_REAL_LENGTH_M * BONE_UNITS_PER_M / MACHETE_GLB_LENGTH
+	model.scale = Vector3(s, s, s)
+	model.rotation = Vector3(0.0, 0.0, -PI / 2.0)
+	holder.add_child(model)
 	return holder
 
 
@@ -500,19 +534,58 @@ func _update_timers(delta: float) -> void:
 
 
 func _try_interact() -> void:
-	_prune_interaction_targets()
-	for target in _interaction_targets:
-		# Never let the animal we are carrying consume the interact key — it
-		# would block opening the corral gate while delivering.
-		if target == carried_animal:
-			continue
-		if target != null and target.has_method("interact"):
-			target.interact(self)
-			return
+	var target := _nearest_interactable()
+	if target != null:
+		target.interact(self)
+		return
 
 	var manager := _get_game_manager()
 	if manager != null and manager.has_method("show_message"):
 		manager.show_message("No hay nada para interactuar aqui.", 1.5)
+
+
+## Interactuable válido más cercano (excluye el animal cargado, que no debe
+## consumir la tecla E al entregar). Lo usan tanto la tecla E como el prompt del
+## HUD, para que la pista y la acción coincidan siempre.
+func _nearest_interactable() -> Node:
+	_prune_interaction_targets()
+	var best: Node = null
+	var best_dist := INF
+	for target in _interaction_targets:
+		if target == null or target == carried_animal:
+			continue
+		if not target.has_method("interact"):
+			continue
+		if target is Node3D:
+			var d := global_position.distance_to((target as Node3D).global_position)
+			if d < best_dist:
+				best_dist = d
+				best = target
+		elif best == null:
+			best = target
+	return best
+
+
+## Muestra/oculta la pista contextual del HUD según el interactuable más cercano.
+func _update_interaction_prompt() -> void:
+	var manager := _get_game_manager()
+	if manager == null:
+		return
+	var target := _nearest_interactable()
+	var text := ""
+	if target != null:
+		if target.has_method("get_interaction_prompt"):
+			text = String(target.get_interaction_prompt())
+		else:
+			text = "Presiona E para interactuar"
+	if text == _last_prompt:
+		return
+	_last_prompt = text
+	if text == "":
+		if manager.has_method("hide_interact_prompt"):
+			manager.hide_interact_prompt()
+	elif manager.has_method("show_interact_prompt"):
+		manager.show_interact_prompt(text)
 
 
 func _on_interaction_area_entered(area: Area3D) -> void:

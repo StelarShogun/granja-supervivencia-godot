@@ -6,6 +6,15 @@ const AUTOSAVE_INTERVAL := 300.0  # 5 minutos, sobre el slot activo
 const DEBUG_DIABLO_SPAWN := false
 ## Capa de colisión del terreno caminable (TerrainCollision).
 const WORLD_LAYER := 2
+## Radio horizontal libre que se exige alrededor del Diablo al spawnear en la
+## cueva, para que no quede incrustado en una pared o roca.
+const SPAWN_CLEARANCE_RADIUS := 1.0
+## Iteraciones máximas del empuje de separación de paredes.
+const SPAWN_CLEARANCE_ITERS := 8
+## Empujón inicial hacia la boca de la cueva (metros) antes de resolver paredes.
+const SPAWN_EXIT_BIAS := 2.0
+## Costo de vida por usar el destrabe (volver al inicio si quedas atascado).
+const RESPAWN_HP_COST := 25.0
 
 @export var animals_in_corral: int = 0
 @export var current_progress: int = 1
@@ -159,7 +168,7 @@ func continue_game(data: Dictionary) -> void:
 	player_entered_cave = bool(data.get("player_entered_cave", false))
 	player_in_safe_zone = false
 	_used_spawn_indices.clear()
-	for i in mini(animals_in_corral, 10):
+	for i in mini(animals_in_corral, _animal_goal()):
 		_used_spawn_indices[i] = true
 	_restore_corral_animals()
 
@@ -232,18 +241,48 @@ func show_message(message: String, duration: float = 2.0) -> void:
 	update_ui()
 
 
+## Pista contextual de interacción (mostrada/ocultada por el jugador según el
+## interactuable más cercano). Reenvía al HUD.
+func show_interact_prompt(text: String) -> void:
+	var ui := get_node_or_null(ui_path)
+	if ui != null and ui.has_method("show_interact_prompt"):
+		ui.show_interact_prompt(text)
+
+
+func hide_interact_prompt() -> void:
+	var ui := get_node_or_null(ui_path)
+	if ui != null and ui.has_method("hide_interact_prompt"):
+		ui.hide_interact_prompt()
+
+
+## Destrabe: teletransporta al jugador al spawn inicial (apoyado en suelo
+## válido) con un costo de vida. Evita softlocks si queda atascado en geometría.
+func respawn_player_to_spawn() -> void:
+	if not game_started or game_over:
+		return
+	var player := get_node_or_null(player_path) as Node3D
+	var player_spawn := get_node_or_null("../SpawnPoints/Player_Spawn") as Node3D
+	if player == null or player_spawn == null:
+		return
+	player.global_position = _ground_snap(player_spawn.global_position, player, 0.5, "QA-RESPAWN")
+	if player.has_method("apply_respawn_cost"):
+		player.apply_respawn_cost(RESPAWN_HP_COST)
+	show_message("Volviste al inicio. Costo: %d de vida." % int(RESPAWN_HP_COST), 2.2)
+
+
 func update_progression(show_progress_message: bool = true) -> void:
-	if animals_in_corral >= ANIMAL_GOAL:
+	if animals_in_corral >= _animal_goal():
 		win_game()
 		return
 
+	var targets := _progress_targets()
 	var old_progress := current_progress
-	if animals_in_corral >= 6:
-		current_progress = 3
-	elif animals_in_corral >= 3:
-		current_progress = 2
-	else:
-		current_progress = 1
+	var progress := 1
+	# Avanza un nivel por cada umbral intermedio alcanzado (el último es la meta).
+	for i in targets.size() - 1:
+		if animals_in_corral >= int(targets[i]):
+			progress = i + 2
+	current_progress = progress
 
 	if current_progress != old_progress:
 		_update_diablo_speed()
@@ -299,7 +338,7 @@ func _restore_corral_animals() -> void:
 	var corral := get_node_or_null(corral_zone_path)
 	if container == null or corral == null or not corral.has_method("place_animal"):
 		return
-	for i in mini(animals_in_corral, ANIMAL_GOAL):
+	for i in mini(animals_in_corral, _animal_goal()):
 		var scene := animal_scene
 		if not animal_species_scenes.is_empty():
 			scene = animal_species_scenes[i % animal_species_scenes.size()]
@@ -338,8 +377,13 @@ func spawn_diablo(show_alert: bool = true) -> void:
 
 	var spawn := get_node_or_null(diablo_cave_spawn_path) as Node3D
 	if spawn != null and diablo is Node3D:
-		(diablo as Node3D).global_position = _ground_snap(
-			spawn.global_position, diablo as Node3D, 0.6, "QA-DIABLO")
+		var body := diablo as Node3D
+		# Suelo válido bajo el marcador de la cueva.
+		var base_pos := _ground_snap(spawn.global_position, body, 0.6, "QA-DIABLO")
+		# Sin sesgo direccional: el marcador ya está en boca abierta de la cueva;
+		# basta separar de paredes cercanas. (El sesgo hacia el origen empujaba
+		# hacia DENTRO de la montaña para esta cueva.)
+		body.global_position = _free_spawn_position(base_pos, body, Vector3.ZERO)
 	if diablo.has_method("set_progress"):
 		diablo.set_progress(current_progress)
 	if diablo.has_method("activate"):
@@ -356,19 +400,31 @@ func spawn_diablo(show_alert: bool = true) -> void:
 	if show_alert:
 		var ui := get_node_or_null(ui_path)
 		if ui != null and ui.has_method("show_center_alert"):
-			ui.show_center_alert("¡El Diablo ha salido de la cueva!", 4.0)
-		show_message("El Diablo salió de la cueva. Mantente lejos.", 4.0)
+			ui.show_center_alert("¡El Diablo ha aparecido!", 4.0)
+		show_message("El Diablo bajó de la montaña. Mantente lejos.", 4.0)
 	save_current_game()
 
 
+## Metas de animales acumuladas por nivel de progresión, según el modo. El
+## último valor es la meta total (condición de victoria). Modo fácil: menos
+## animales y menos progresiones.
+func _progress_targets() -> Array:
+	if SaveManager.game_mode == SaveManager.MODE_EASY:
+		return [2, 4]
+	return [3, 6, ANIMAL_GOAL]
+
+
+## Meta total de animales (condición de victoria) según el modo.
+func _animal_goal() -> int:
+	var targets := _progress_targets()
+	return int(targets[targets.size() - 1])
+
+
+## Cuántos animales deben existir en el nivel de progresión actual.
 func _active_animal_target() -> int:
-	match current_progress:
-		1:
-			return 3
-		2:
-			return 6
-		_:
-			return ANIMAL_GOAL
+	var targets := _progress_targets()
+	var idx := clampi(current_progress - 1, 0, targets.size() - 1)
+	return int(targets[idx])
 
 
 func _next_available_spawn_index(marker_count: int) -> int:
@@ -397,9 +453,11 @@ func update_ui() -> void:
 		if player != null and ui.has_method("set_health"):
 			ui.set_health(float(player.get("health")), float(player.get("MAX_HEALTH")))
 		if ui.has_method("set_animals"):
-			ui.set_animals(animals_in_corral, ANIMAL_GOAL)
+			ui.set_animals(animals_in_corral, _animal_goal())
 		if ui.has_method("set_progress"):
-			ui.set_progress(current_progress)
+			ui.set_progress(current_progress, _progress_targets().size())
+		if player != null and ui.has_method("set_machete"):
+			ui.set_machete(bool(player.get("has_machete")))
 		if _message_time_left > 0.0:
 			if ui.has_method("set_message"):
 				ui.set_message(_current_message)
@@ -408,7 +466,7 @@ func update_ui() -> void:
 
 	var corral := get_node_or_null(corral_zone_path)
 	if corral != null and corral.has_method("set_count"):
-		corral.set_count(animals_in_corral, ANIMAL_GOAL)
+		corral.set_count(animals_in_corral, _animal_goal())
 
 
 func update_player_health(value: float, max_value: float) -> void:
@@ -446,24 +504,23 @@ func _restore_objective_message() -> void:
 
 
 func _objective_message() -> String:
+	var goal := _animal_goal()
 	if victory:
-		return "Victoria: reuniste 10 animales en el corral."
+		return "Victoria: reuniste %d animales en el corral." % goal
 	if game_over:
 		return "Derrota: te quedaste sin vida."
 
 	var carry_hint := " (1 animal a la vez)" if SaveManager.game_mode == SaveManager.MODE_HARD else ""
-	match current_progress:
-		1:
-			return "Recolecta animales y llévalos al corral." + carry_hint
-		2:
-			return "Progresión 2: lleva 6 animales al corral." + carry_hint
-		_:
-			return "Progresión 3: completa 10 animales en el corral." + carry_hint
+	if current_progress <= 1:
+		return "Recolecta animales y llévalos al corral." + carry_hint
+	var targets := _progress_targets()
+	var need := int(targets[clampi(current_progress - 1, 0, targets.size() - 1)])
+	return "Progresión %d: lleva %d animales al corral." % [current_progress, need] + carry_hint
 
 
 func win_game() -> void:
-	animals_in_corral = ANIMAL_GOAL
-	current_progress = 3
+	animals_in_corral = _animal_goal()
+	current_progress = _progress_targets().size()
 	victory = true
 	game_over = true
 	AudioManager.stop_gameplay()
@@ -589,6 +646,49 @@ func _ground_snap(
 			ground + Vector3.UP * offset_y,
 		])
 	return ground + Vector3.UP * offset_y
+
+
+## Coloca al Diablo en un punto sin paredes pegadas. Primero lo empuja un poco
+## hacia la salida de la cueva (`exit_dir`), luego dispara rayos horizontales en
+## ocho direcciones contra la capa World y lo separa de cualquier roca/pared que
+## invada `SPAWN_CLEARANCE_RADIUS`. Vuelve a apoyar en el suelo tras cada empuje.
+func _free_spawn_position(pos: Vector3, body: Node3D, exit_dir: Vector3) -> Vector3:
+	var world := body.get_world_3d()
+	if world == null:
+		return pos
+	var space := world.direct_space_state
+	var result := pos
+
+	# Empujón inicial hacia la boca de la cueva para que dé el primer paso fuera
+	# de la roca en lugar de hacia adentro.
+	if exit_dir.length_squared() > 0.0001:
+		result += exit_dir.normalized() * SPAWN_EXIT_BIAS
+		result = _ground_snap(result, body, 0.6, "QA-DIABLO-EXIT")
+
+	for _iteration in SPAWN_CLEARANCE_ITERS:
+		var probe := result + Vector3.UP * 1.0
+		var push := Vector3.ZERO
+		var blocked := 0
+		for direction_index in 8:
+			var angle := float(direction_index) / 8.0 * TAU
+			var dir := Vector3(cos(angle), 0.0, sin(angle))
+			var to := probe + dir * SPAWN_CLEARANCE_RADIUS
+			var query := PhysicsRayQueryParameters3D.create(probe, to, WORLD_LAYER)
+			var hit := space.intersect_ray(query)
+			if hit.is_empty():
+				continue
+			var penetration: float = SPAWN_CLEARANCE_RADIUS - probe.distance_to(hit["position"])
+			push += -dir * maxf(penetration, 0.0)
+			blocked += 1
+		if blocked == 0 or push.length_squared() < 0.0001:
+			break
+		push.y = 0.0
+		result += push
+		result = _ground_snap(result, body, 0.6, "QA-DIABLO-CLR")
+
+	if DEBUG_DIABLO_SPAWN:
+		print("[QA-DIABLO] spawn libre final=%v" % result)
+	return result
 
 
 func _clear_animals() -> void:

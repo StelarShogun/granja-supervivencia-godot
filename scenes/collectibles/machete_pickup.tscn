@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/collectibles/machete_pickup.gd" id="1_machete"]
+[ext_resource type="PackedScene" uid="uid://cqxcpllbtutwr" path="res://assets/models/props/machete.glb" id="2_model"]
+
+[sub_resource type="CylinderShape3D" id="Shape_Pickup"]
+height = 1.2
+radius = 0.7
+
+[node name="Machete" type="Area3D" groups=["interactives"]]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("1_machete")
+
+[node name="MacheteModel" parent="." instance=ExtResource("2_model")]
+transform = Transform3D(0, 0.00753, 0, -0.00753, 0, 0, 0, 0, 0.00753, 0, 0.27, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_Pickup")

@@ -71,6 +71,11 @@ const ANIMATION_BY_MODEL := {
 @export var proximity_radius: float = 18.0
 @export var proximity_bleat_min: float = 6.0
 @export var proximity_bleat_max: float = 14.0
+## Pista por rango: radio en el que el animal emite un llamado lejano tenue y
+## ocasional, para orientar al jugador hacia su zona sin marcador en pantalla.
+@export var hint_radius: float = 85.0
+@export var hint_bleat_min: float = 9.0
+@export var hint_bleat_max: float = 17.0
 @export var wander_speed: float = 1.8
 @export var wander_radius: float = 120.0
 @export var wander_interval_min: float = 3.0
@@ -226,10 +231,10 @@ func _resolve_animal_kind() -> void:
 func _setup_voice() -> void:
 	_voice = AudioStreamPlayer3D.new()
 	_voice.name = "AnimalVoice"
-	# Audible across the whole proximity radius (the old 5 m unit_size made the
-	# bleats nearly silent at normal walking distance).
-	_voice.max_distance = proximity_radius + 12.0
-	_voice.unit_size = 12.0
+	# Audible across the full hint radius so distant calls carry as a soft cue;
+	# a larger unit_size makes the falloff gentle enough to hear far away.
+	_voice.max_distance = hint_radius + 15.0
+	_voice.unit_size = 18.0
 	_voice.bus = &"Master"
 	var stream := AudioManager.get_animal_stream(animal_kind)
 	if stream != null:
@@ -242,20 +247,34 @@ func _update_proximity_voice(delta: float) -> void:
 	if _cached_player == null:
 		return
 	var distance := global_position.distance_to(_cached_player.global_position)
-	if distance > proximity_radius:
-		_bleat_timer = minf(_bleat_timer, randf_range(2.0, 4.0))
+	# Animales ya entregados (en el corral) NO dan pista lejana: su zona ya se
+	# conoce. Solo emiten la voz cercana de ambiente.
+	var hint_on := not collected and not _in_corral
+	var outer := hint_radius if hint_on else proximity_radius
+	if distance > outer:
+		_bleat_timer = minf(_bleat_timer, randf_range(3.0, 6.0))
 		return
 	_bleat_timer -= delta
 	if _bleat_timer <= 0.0:
 		_bleat_spatial(distance)
-		_bleat_timer = randf_range(proximity_bleat_min, proximity_bleat_max)
+		if distance <= proximity_radius:
+			_bleat_timer = randf_range(proximity_bleat_min, proximity_bleat_max)
+		else:
+			_bleat_timer = randf_range(hint_bleat_min, hint_bleat_max)
 
 
 func _bleat_spatial(distance: float) -> void:
 	if _voice == null or _voice.stream == null or _voice.playing:
 		return
-	var closeness := 1.0 - clampf(distance / proximity_radius, 0.0, 1.0)
-	_voice.volume_db = lerpf(-12.0, 3.0, closeness)
+	if distance <= proximity_radius:
+		# Cerca: claro, sube de volumen cuanto más cerca.
+		var closeness := 1.0 - clampf(distance / proximity_radius, 0.0, 1.0)
+		_voice.volume_db = lerpf(-12.0, 3.0, closeness)
+	else:
+		# Banda de pista lejana: siempre tenue, se desvanece hacia hint_radius.
+		var span := maxf(hint_radius - proximity_radius, 1.0)
+		var near_t := 1.0 - clampf((distance - proximity_radius) / span, 0.0, 1.0)
+		_voice.volume_db = lerpf(-24.0, -11.0, near_t)
 	_voice.pitch_scale = randf_range(0.94, 1.06)
 	_voice.play()
 
